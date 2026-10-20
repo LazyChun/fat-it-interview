@@ -9,6 +9,7 @@ const {
   ModuleFederationPlugin,
 } = require("@module-federation/enhanced/webpack");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
+const MonacoWebpackPlugin = require("monaco-editor-webpack-plugin");
 const manifest = require("./plugin.json");
 
 const MF_NAME =
@@ -20,7 +21,9 @@ const MF_NAME =
 module.exports = (_, argv) => {
   const isProd = argv && argv.mode === "production";
   // eslint-disable-next-line no-console
-  console.log(`[fat-it-interview] building remoteEntry as MF name: "${MF_NAME}"`);
+  console.log(
+    `[fat-it-interview] building remoteEntry as MF name: "${MF_NAME}"`,
+  );
   return {
     entry: "./src/bootstrap.ts",
     output: {
@@ -42,6 +45,11 @@ module.exports = (_, argv) => {
             options: { transpileOnly: true },
           },
           exclude: /node_modules/,
+        },
+        {
+          // monaco-editor ESM 自带 css（编辑器样式），需要注入页面
+          test: /\.css$/,
+          use: ["style-loader", "css-loader"],
         },
       ],
     },
@@ -79,6 +87,22 @@ module.exports = (_, argv) => {
         },
       }),
       new HtmlWebpackPlugin({ template: "./public/index.html" }),
+      // Monaco editor workers/language chunks. Languages trimmed to those used
+      // by interview answers (+ likely future ones) to keep dist small.
+      new MonacoWebpackPlugin({
+        languages: [
+          "javascript",
+          "typescript",
+          "css",
+          "html",
+          "xml",
+          "json",
+          "java",
+          "python",
+          "sql",
+          "shell",
+        ],
+      }),
     ],
     devtool: isProd ? false : "source-map",
     optimization: { minimize: isProd },

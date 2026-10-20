@@ -1,5 +1,6 @@
 import React from "react";
 import type { AnswerPart } from "../data/types";
+import CodeBlock from "./CodeBlock";
 
 const inlineCode: React.CSSProperties = {
   fontFamily: "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
@@ -46,7 +47,10 @@ const AnswerView: React.FC<{ parts: AnswerPart[] }> = ({ parts }) => {
         }
         if (part.type === "list") {
           return (
-            <ul key={index} style={{ margin: 0, paddingLeft: 18, lineHeight: 1.7 }}>
+            <ul
+              key={index}
+              style={{ margin: 0, paddingLeft: 18, lineHeight: 1.7 }}
+            >
               {part.items.map((item, itemIndex) => (
                 <li key={`${itemIndex}-${item}`}>
                   <Rich text={item} />
@@ -55,24 +59,7 @@ const AnswerView: React.FC<{ parts: AnswerPart[] }> = ({ parts }) => {
             </ul>
           );
         }
-        return (
-          <pre
-            key={index}
-            style={{
-              margin: 0,
-              padding: 12,
-              borderRadius: 8,
-              overflow: "auto",
-              background: "rgba(128,128,128,0.12)",
-              border: "1px solid rgba(128,128,128,0.22)",
-              fontSize: 12,
-              lineHeight: 1.6,
-              fontFamily: "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
-            }}
-          >
-            <code>{part.code}</code>
-          </pre>
-        );
+        return <CodeBlock key={index} lang={part.lang} code={part.code} />;
       })}
     </div>
   );
