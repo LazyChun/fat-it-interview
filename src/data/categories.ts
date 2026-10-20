@@ -17,6 +17,11 @@ export const CATEGORY_TREE: CategoryNode[] = [
   { id: "fe-vue", title: "Vue", blurb: "响应式与组件", parentId: "frontend" },
   { id: "fe-webpack", title: "Webpack", blurb: "构建与拆包", parentId: "frontend" },
   { id: "fe-browser", title: "浏览器", blurb: "网络、缓存与性能", parentId: "frontend" },
+  { id: "fe-ts", title: "TypeScript", blurb: "类型系统与工程实践", parentId: "frontend" },
+  { id: "fe-perf", title: "性能优化", blurb: "首屏、长列表与内存", parentId: "frontend" },
+  { id: "fe-hand", title: "手写题", blurb: "防抖、深拷贝、Promise 等高频手写", parentId: "frontend" },
+  { id: "fe-eng", title: "工程化", blurb: "Vite、Tree-shaking、微前端与监控", parentId: "frontend" },
+  { id: "fe-security", title: "Web 安全", blurb: "XSS 与 CSRF", parentId: "frontend" },
 
   { id: "java", title: "Java", blurb: "JVM、集合、并发与 Spring" },
   { id: "java-jvm", title: "JVM", blurb: "内存与垃圾回收", parentId: "java" },
