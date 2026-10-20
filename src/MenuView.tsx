@@ -1,10 +1,12 @@
 import React, { useEffect, useMemo, useState } from "react";
 import type { FatNotesPluginSDK } from "fat-notes-sdk";
 import { Empty, Input } from "antd";
-import { CATEGORIES, branchOf, childrenOf, getCategory, parentOf } from "./data/categories";
+import MenuSettingsButton from "./components/MenuSettingsButton";
+import { branchOf, getCategory, parentOf } from "./data/categories";
 import { QUESTIONS, questionsForNode, topicOf } from "./data/questions";
-import { useRouteTick, useTick } from "./hooks";
+import { useMenuPrefs, useRouteTick, useTick } from "./hooks";
 import { CategoryIcon } from "./icons";
+import { visibleCategories, visibleChildren } from "./menuPrefs";
 import { getProgress } from "./progress";
 import { categoryPath, parseRoute, questionPath } from "./routes";
 import ThemeShell from "./ThemeShell";
@@ -17,6 +19,8 @@ const MenuView: React.FC<Props> = ({ sdk }) => {
   useRouteTick(sdk);
   useTick();
   const [query, setQuery] = useState("");
+  const [panelHover, setPanelHover] = useState(false);
+  const menuPrefs = useMenuPrefs();
   const route = parseRoute(sdk.router.getCurrent().path);
   const progress = getProgress();
   const activeQuestion =
@@ -62,10 +66,15 @@ const MenuView: React.FC<Props> = ({ sdk }) => {
     : route.kind === "category"
       ? route.questionId
       : undefined;
+  const menuCategories = visibleCategories(menuPrefs);
 
   return (
     <ThemeShell sdk={sdk} padding={10}>
-      <div style={{ display: "flex", flexDirection: "column", height: "100%", minHeight: 0, gap: 8 }}>
+      <div
+        onMouseEnter={() => setPanelHover(true)}
+        onMouseLeave={() => setPanelHover(false)}
+        style={{ display: "flex", flexDirection: "column", height: "100%", minHeight: 0, gap: 8 }}
+      >
         <Input
           allowClear
           size="small"
@@ -73,8 +82,11 @@ const MenuView: React.FC<Props> = ({ sdk }) => {
           placeholder="搜索题目、标签、分类"
           onChange={(event) => setQuery(event.target.value)}
         />
-        <div style={{ fontSize: 12, opacity: 0.65 }}>
-          {QUESTIONS.length} 题 · 已掌握 {progress.mastered.length}
+        <div style={{ display: "flex", alignItems: "center", gap: 6, minHeight: 22 }}>
+          <div style={{ fontSize: 12, opacity: 0.65, flex: 1, minWidth: 0 }}>
+            {QUESTIONS.length} 题 · 已掌握 {progress.mastered.length}
+          </div>
+          <MenuSettingsButton revealed={panelHover} />
         </div>
         <div style={{ flex: 1, overflow: "auto", minHeight: 0 }}>
           {query.trim() ? (
@@ -100,24 +112,30 @@ const MenuView: React.FC<Props> = ({ sdk }) => {
                 );
               })
             )
+          ) : menuCategories.length === 0 ? (
+            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="分类已全部隐藏" />
           ) : (
-            CATEGORIES.map((category) => {
-              const kids = childrenOf(category.id);
+            menuCategories.map((category) => {
+              const kids = visibleChildren(category.id, menuPrefs);
               const open = expanded.includes(category.id);
               const own = countOf(category.id, progress.mastered);
               return (
                 <div key={category.id} style={{ marginBottom: 6 }}>
                   <div style={rowStyle(category.id === activeNodeId, true)}>
-                    <button
-                      type="button"
-                      aria-label={open ? `收起${category.title}` : `展开${category.title}`}
-                      onClick={() => toggle(category.id)}
-                      style={chevronButton}
-                    >
-                      <span style={{ display: "inline-block", transform: open ? "rotate(90deg)" : undefined }}>
-                        ›
-                      </span>
-                    </button>
+                    {kids.length > 0 ? (
+                      <button
+                        type="button"
+                        aria-label={open ? `收起${category.title}` : `展开${category.title}`}
+                        onClick={() => toggle(category.id)}
+                        style={chevronButton}
+                      >
+                        <span style={{ display: "inline-block", transform: open ? "rotate(90deg)" : undefined }}>
+                          ›
+                        </span>
+                      </button>
+                    ) : (
+                      <span style={{ width: 22, flex: "none" }} />
+                    )}
                     <button
                       type="button"
                       onClick={() => sdk.router.navigate(categoryPath(category.id))}
@@ -130,7 +148,7 @@ const MenuView: React.FC<Props> = ({ sdk }) => {
                       </span>
                     </button>
                   </div>
-                  {open ? (
+                  {open && kids.length > 0 ? (
                     <div
                       style={{
                         margin: "4px 0 2px 16px",
