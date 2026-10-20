@@ -2,6 +2,7 @@ import { algorithmQuestions } from "./algorithm";
 import { backendQuestions } from "./backend";
 import { childrenOf, getCategory } from "./categories";
 import { databaseQuestions } from "./database";
+import { frontendExtraQuestions } from "./frontend-extra";
 import { frontendQuestions } from "./frontend";
 import { javaQuestions } from "./java";
 import { networkQuestions } from "./network";
@@ -12,6 +13,7 @@ import type { Question } from "./types";
 
 export const QUESTIONS: Question[] = [
   ...frontendQuestions,
+  ...frontendExtraQuestions,
   ...javaQuestions,
   ...backendQuestions,
   ...opsQuestions,

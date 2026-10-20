@@ -71,6 +71,70 @@ export const TOPIC_OF: Record<string, string> = {
   "fe-xss": "fe-security",
   "fe-csrf": "fe-security",
 
+  // 2026-10 新增批次
+  "fe-html-inline": "fe-html",
+  "fe-html-a11y": "fe-html",
+
+  "fe-css-box": "fe-css",
+  "fe-css-position": "fe-css",
+  "fe-css-var": "fe-css",
+  "fe-css-animation": "fe-css",
+  "fe-css-container": "fe-css",
+  "fe-css-pseudo": "fe-css",
+
+  "fe-js-float": "fe-js",
+  "fe-js-coercion": "fe-js",
+  "fe-js-tdz": "fe-js",
+  "fe-js-array": "fe-js",
+  "fe-js-mapset": "fe-js",
+  "fe-js-iterator": "fe-js",
+  "fe-js-proxy": "fe-js",
+  "fe-js-abort": "fe-js",
+
+  "fe-react-actions": "fe-react",
+  "fe-react-transition": "fe-react",
+  "fe-react-controlled": "fe-react",
+  "fe-react-effect": "fe-react",
+  "fe-react-ref": "fe-react",
+  "fe-react-context": "fe-react",
+  "fe-react-reducer": "fe-react",
+  "fe-react-compiler": "fe-react",
+  "fe-react-use": "fe-react",
+
+  "fe-vue-router": "fe-vue",
+  "fe-vue-pinia": "fe-vue",
+  "fe-vue-teleport": "fe-vue",
+  "fe-vue-async": "fe-vue",
+  "fe-vue-shallow": "fe-vue",
+  "fe-vue-compile": "fe-vue",
+
+  "fe-ts-infer": "fe-ts",
+  "fe-ts-enum": "fe-ts",
+  "fe-ts-runtime": "fe-ts",
+
+  "fe-browser-process": "fe-browser",
+  "fe-browser-storage": "fe-browser",
+  "fe-browser-raf": "fe-browser",
+  "fe-browser-rendering": "fe-browser",
+  "fe-browser-blob": "fe-browser",
+
+  "fe-perf-longtask": "fe-perf",
+  "fe-perf-bundle": "fe-perf",
+
+  "fe-eng-module": "fe-eng",
+  "fe-eng-monorepo": "fe-eng",
+  "fe-eng-component": "fe-eng",
+
+  "fe-security-csp": "fe-security",
+  "fe-security-clickjack": "fe-security",
+  "fe-security-supply": "fe-security",
+
+  "fe-hand-eventemitter": "fe-hand",
+  "fe-hand-lru": "fe-hand",
+  "fe-hand-array": "fe-hand",
+  "fe-hand-format": "fe-hand",
+  "fe-hand-jsonp": "fe-hand",
+
   "java-memory": "java-jvm",
   "java-gc": "java-jvm",
   "java-hashmap": "java-collection",
