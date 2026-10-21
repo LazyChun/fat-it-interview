@@ -5,6 +5,7 @@ import { databaseQuestions } from "./database";
 import { frontendAiQuestions } from "./frontend-ai";
 import { frontendExtraQuestions } from "./frontend-extra";
 import { frontendHotQuestions } from "./frontend-hot";
+import { frontendMoreQuestions } from "./frontend-more";
 import { frontendQuestions } from "./frontend";
 import { frontendStateQuestions } from "./frontend-state";
 import { javaQuestions } from "./java";
@@ -18,6 +19,7 @@ export const QUESTIONS: Question[] = [
   ...frontendQuestions,
   ...frontendExtraQuestions,
   ...frontendHotQuestions,
+  ...frontendMoreQuestions,
   ...frontendStateQuestions,
   ...frontendAiQuestions,
   ...javaQuestions,
