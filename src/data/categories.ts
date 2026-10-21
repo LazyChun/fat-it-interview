@@ -9,11 +9,13 @@ export interface CategoryNode {
 }
 
 export const CATEGORY_TREE: CategoryNode[] = [
-  { id: "frontend", title: "Web 前端", blurb: "HTML、CSS、JavaScript、React、Vue 与工程化" },
+  { id: "frontend", title: "Web 前端", blurb: "HTML、CSS、JavaScript、React、Vue、工程化与 AI 应用" },
   { id: "fe-html", title: "HTML", blurb: "语义化、资源加载", parentId: "frontend" },
   { id: "fe-css", title: "CSS", blurb: "布局与格式化上下文", parentId: "frontend" },
   { id: "fe-js", title: "JavaScript", blurb: "语言机制与异步", parentId: "frontend" },
   { id: "fe-react", title: "React", blurb: "Fiber 与 Hooks", parentId: "frontend" },
+  { id: "fe-redux", title: "Redux", blurb: "数据流、中间件与 RTK", parentId: "frontend" },
+  { id: "fe-zustand", title: "Zustand", blurb: "store、选择器与订阅", parentId: "frontend" },
   { id: "fe-vue", title: "Vue", blurb: "响应式与组件", parentId: "frontend" },
   { id: "fe-webpack", title: "Webpack", blurb: "构建与拆包", parentId: "frontend" },
   { id: "fe-browser", title: "浏览器", blurb: "网络、缓存与性能", parentId: "frontend" },
@@ -22,6 +24,7 @@ export const CATEGORY_TREE: CategoryNode[] = [
   { id: "fe-hand", title: "手写题", blurb: "防抖、深拷贝、Promise 等高频手写", parentId: "frontend" },
   { id: "fe-eng", title: "工程化", blurb: "Vite、Tree-shaking、微前端与监控", parentId: "frontend" },
   { id: "fe-security", title: "Web 安全", blurb: "XSS 与 CSRF", parentId: "frontend" },
+  { id: "fe-ai", title: "AI 工程", blurb: "RAG、MCP、Prompt 与流式界面", parentId: "frontend" },
 
   { id: "java", title: "Java", blurb: "JVM、集合、并发与 Spring" },
   { id: "java-jvm", title: "JVM", blurb: "内存与垃圾回收", parentId: "java" },

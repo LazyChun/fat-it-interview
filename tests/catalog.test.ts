@@ -9,7 +9,7 @@ const CATEGORY_IDS = new Set(CATEGORIES.map((item) => item.id));
 describe("question bank", () => {
   it("has a unique id and a real category for every question", () => {
     const ids = new Set<string>();
-    expect(QUESTIONS.length).toBe(255);
+    expect(QUESTIONS.length).toBe(277);
     for (const question of QUESTIONS) {
       expect(ids.has(question.id)).toBe(false);
       ids.add(question.id);
@@ -30,6 +30,8 @@ describe("question bank", () => {
       "CSS",
       "JavaScript",
       "React",
+      "Redux",
+      "Zustand",
       "Vue",
       "Webpack",
       "浏览器",
@@ -38,6 +40,7 @@ describe("question bank", () => {
       "手写题",
       "工程化",
       "Web 安全",
+      "AI 工程",
     ]);
     for (const child of childrenOf("frontend")) {
       expect(questionsForNode(child.id).length).toBeGreaterThan(0);
