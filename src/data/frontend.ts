@@ -1275,9 +1275,9 @@ export const frontendQuestions: Question[] = [
         items: [
           "开发时 Vite 不打包：浏览器原生支持 ESM，Vite 只按需编译被请求的单个模块，启动时间和项目大小解耦。",
           "Webpack 开发时要先把全量模块打进 bundle 才能启动，项目越大启动越慢，HMR 也要重建更大的图。",
-          "依赖预构建（esbuild）：把 CommonJS 依赖转成 ESM 并合并请求，esbuild 用 Go 写，比 JS 工具链快一个量级。",
-          "热更新粒度精确：改一个文件只失效它到入口之间被缓存的模块链，配合 HTTP 缓存（304）几乎即时。",
-          "生产环境用 Rollup（新版 Rolldown）打包：为了兼容浏览器和利用 Tree-shaking、代码分割、压缩优化。开发快靠原生 ESM，生产稳靠成熟打包器。",
+          "依赖预构建：把裸导入变成浏览器能请求的 ESM，并把一个包里的大量小文件合并。Vite 7 及更早用 esbuild，Vite 8 起改由 Rolldown 做。",
+          "热更新粒度精确：改一个文件只让该模块到最近的 accept 边界失效，配合强缓存几乎即时。找不到边界才整页刷新。",
+          "生产环境要打包，才能压缩、拆包、摇树和长缓存。Vite 7 及更早用 Rollup；Vite 8（2026 年 3 月）起开发和生产都交给 Rolldown。另有实验性的 Full Bundle Mode，大型项目可以在开发时也打包来减少请求数，默认仍是不打包。",
           "迁移注意：环境变量从 process.env 换成 import.meta.env，特殊 require 语法要改造。",
         ],
       },

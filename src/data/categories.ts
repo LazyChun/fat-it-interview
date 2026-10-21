@@ -18,11 +18,12 @@ export const CATEGORY_TREE: CategoryNode[] = [
   { id: "fe-zustand", title: "Zustand", blurb: "store、选择器与订阅", parentId: "frontend" },
   { id: "fe-vue", title: "Vue", blurb: "响应式与组件", parentId: "frontend" },
   { id: "fe-webpack", title: "Webpack", blurb: "构建与拆包", parentId: "frontend" },
+  { id: "fe-vite", title: "Vite", blurb: "预构建、热更新与生产打包", parentId: "frontend" },
   { id: "fe-browser", title: "浏览器", blurb: "网络、缓存与性能", parentId: "frontend" },
   { id: "fe-ts", title: "TypeScript", blurb: "类型系统与工程实践", parentId: "frontend" },
   { id: "fe-perf", title: "性能优化", blurb: "首屏、长列表与内存", parentId: "frontend" },
   { id: "fe-hand", title: "手写题", blurb: "防抖、深拷贝、Promise 等高频手写", parentId: "frontend" },
-  { id: "fe-eng", title: "工程化", blurb: "Vite、Tree-shaking、微前端与监控", parentId: "frontend" },
+  { id: "fe-eng", title: "工程化", blurb: "Tree-shaking、微前端与监控", parentId: "frontend" },
   { id: "fe-security", title: "Web 安全", blurb: "XSS 与 CSRF", parentId: "frontend" },
   { id: "fe-ai", title: "AI 工程", blurb: "RAG、MCP、Prompt 与流式界面", parentId: "frontend" },
 
