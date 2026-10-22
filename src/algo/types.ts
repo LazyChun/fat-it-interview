@@ -53,7 +53,7 @@ export interface ListNode {
 export interface ListFrame {
   kind: "list";
   nodes: ListNode[];
-  roles: Record<string, "prev" | "curr" | "next">;
+  roles: Record<string, "prev" | "curr" | "next" | "slow" | "fast" | "meet">;
   caption: string;
 }
 
@@ -77,7 +77,7 @@ export interface TreeFrame {
   kind: "tree";
   nodes: TreeNode[];
   root: string;
-  roles: Record<string, "stack" | "visit" | "done">;
+  roles: Record<string, "stack" | "visit" | "done" | "queue">;
   output: number[];
   caption: string;
 }

@@ -3,8 +3,10 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { runBfs } from "../src/algo/bfs";
 import { runBubble } from "../src/algo/bubble";
+import { runCycle } from "../src/algo/cycle";
 import { runInorder } from "../src/algo/inorder";
 import { runKnapsack } from "../src/algo/knapsack";
+import { runLevelOrder } from "../src/algo/levelOrder";
 import { FrameView } from "../src/components/visuals";
 import type { DemoFrame } from "../src/algo/types";
 
@@ -30,5 +32,11 @@ describe("demo frames render", () => {
     const tree = runInorder();
     const last = tree[tree.length - 1];
     expect(html(last)).toContain("1，2，3，4，5，6，7");
+
+    const levels = runLevelOrder();
+    expect(html(levels[levels.length - 1])).toContain("4，2，6，1，3，5，7");
+
+    const cycle = runCycle("1,2,3,4 | 1");
+    expect(html(cycle[cycle.length - 1])).toContain("meet");
   });
 });

@@ -1,6 +1,8 @@
 import type { AlgoDemo, TreeFrame, TreeNode } from "./types";
 
-const NODES: TreeNode[] = [
+export const TREE_ROOT = "n4";
+
+export const TREE_NODES: TreeNode[] = [
   { id: "n4", value: 4, left: "n2", right: "n6" },
   { id: "n2", value: 2, left: "n1", right: "n3" },
   { id: "n6", value: 6, left: "n5", right: "n7" },
@@ -10,7 +12,7 @@ const NODES: TreeNode[] = [
   { id: "n7", value: 7 },
 ];
 
-const BY_ID = new Map(NODES.map((node) => [node.id, node]));
+const BY_ID = new Map(TREE_NODES.map((node) => [node.id, node]));
 
 export function runInorder(): TreeFrame[] {
   const frames: TreeFrame[] = [];
@@ -28,8 +30,8 @@ export function runInorder(): TreeFrame[] {
     if (visit) roles[visit] = "visit";
     frames.push({
       kind: "tree",
-      nodes: NODES,
-      root: "n4",
+      nodes: TREE_NODES,
+      root: TREE_ROOT,
       roles,
       output: [...output],
       caption,

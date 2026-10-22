@@ -15,7 +15,7 @@ const AlgoBlock: React.FC<{ sdk: FatNotesPluginSDK }> = ({ sdk }) => {
           value={demoId}
           options={DEMOS.map((demo) => ({ value: demo.id, label: demo.title }))}
           onChange={(value) => setDemoId(value)}
-          style={{ width: 180 }}
+          style={{ width: 240 }}
           popupMatchSelectWidth={false}
         />
         <AlgoPlayer demoId={demoId} compact />

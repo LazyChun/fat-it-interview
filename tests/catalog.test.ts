@@ -9,7 +9,7 @@ const CATEGORY_IDS = new Set(CATEGORIES.map((item) => item.id));
 describe("question bank", () => {
   it("has a unique id and a real category for every question", () => {
     const ids = new Set<string>();
-    expect(QUESTIONS.length).toBe(343);
+    expect(QUESTIONS.length).toBe(354);
     for (const question of QUESTIONS) {
       expect(ids.has(question.id)).toBe(false);
       ids.add(question.id);

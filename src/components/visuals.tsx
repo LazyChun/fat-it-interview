@@ -159,6 +159,9 @@ const Linked: React.FC<{ frame: ListFrame }> = ({ frame }) => {
     prev: "#fa8c16",
     curr: "#1677ff",
     next: "#722ed1",
+    slow: "#13c2c2",
+    fast: "#eb2f96",
+    meet: "#52c41a",
   };
   return (
     <div style={stage}>
@@ -169,7 +172,7 @@ const Linked: React.FC<{ frame: ListFrame }> = ({ frame }) => {
           const to = indexOf.get(node.next) ?? 0;
           const x1 = from * 84 + 28;
           const x2 = to * 84 + 28;
-          const backward = to < from;
+          const backward = to <= from;
           const d = backward
             ? `M ${x1} 48 Q ${(x1 + x2) / 2} 8 ${x2} 48`
             : `M ${x1 + 18} 58 L ${x2 - 22} 58`;
@@ -282,6 +285,7 @@ const Tree: React.FC<{ frame: TreeFrame }> = ({ frame }) => {
   const width = Math.max(cursor * 72, 200);
   const roleColor: Record<string, string> = {
     stack: "#1677ff",
+    queue: "#fa8c16",
     visit: "#722ed1",
     done: "#52c41a",
   };
@@ -336,6 +340,7 @@ export const LEGEND: Record<DemoFrame["kind"], Array<{ color: string; label: str
     { color: BAR_COLOR.swap, label: "交换" },
     { color: BAR_COLOR.pivot, label: "枢轴" },
     { color: BAR_COLOR.sorted, label: "已就位" },
+    { color: BAR_COLOR.active, label: "关注" },
     { color: BAR_COLOR.range, label: "当前区间" },
   ],
   array: [
@@ -345,7 +350,7 @@ export const LEGEND: Record<DemoFrame["kind"], Array<{ color: string; label: str
     { color: "#52c41a", label: "命中" },
   ],
   grid: [
-    { color: "#faad14", label: "队列中" },
+    { color: "#faad14", label: "待扩展" },
     { color: "#91caff", label: "已出队" },
     { color: "#722ed1", label: "最短路径" },
     { color: "#3a3a3a", label: "墙" },
@@ -354,10 +359,14 @@ export const LEGEND: Record<DemoFrame["kind"], Array<{ color: string; label: str
     { color: "#fa8c16", label: "prev" },
     { color: "#1677ff", label: "curr" },
     { color: "#722ed1", label: "next" },
+    { color: "#13c2c2", label: "slow" },
+    { color: "#eb2f96", label: "fast" },
+    { color: "#52c41a", label: "meet" },
   ],
   matrix: [{ color: "#1677ff", label: "正在填写的格子" }],
   tree: [
     { color: "#1677ff", label: "在栈里" },
+    { color: "#fa8c16", label: "在队列里" },
     { color: "#722ed1", label: "正在访问" },
     { color: "#52c41a", label: "已访问" },
   ],
