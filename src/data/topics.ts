@@ -299,6 +299,17 @@ export const TOPIC_OF: Record<string, string> = {
   "fe-ai-schema": "fe-ai",
   "fe-ai-cite": "fe-ai",
 
+  "fe-js-frame": "fe-js",
+  "fe-hand-mypromise": "fe-hand",
+  "fe-browser-xorigin": "fe-browser",
+  "fe-security-rbac": "fe-security",
+  "fe-browser-heartbeat": "fe-browser",
+  "fe-eng-widget": "fe-eng",
+  "fe-eng-sample": "fe-eng",
+  "fe-eng-sandbox": "fe-eng",
+  "fe-perf-stack": "fe-perf",
+  "fe-design-console": "fe-design",
+
   "java-memory": "java-jvm",
   "java-gc": "java-jvm",
   "java-hashmap": "java-collection",

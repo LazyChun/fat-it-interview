@@ -1119,18 +1119,19 @@ export const frontendQuestions: Question[] = [
         items: [
           "防抖：事件停止触发 n 毫秒后才执行一次，期间再触发就重新计时。场景：搜索框输入、窗口 resize 结束后重算。",
           "节流：n 毫秒内最多执行一次，保证周期性触发。场景：滚动加载、按钮防连点、鼠标移动。",
-          "防抖闭包里存 timer，每次触发 clearTimeout 再 setTimeout；节流闭包里存上次执行时间或一个锁标志。",
-          "immediate 选项：第一次触发立即执行，后续冷却；cancel 方法：手动取消等待中的调用。",
+          "防抖闭包里存 timer，每次触发先清掉再重开。节流记下上次执行时间，间隔没到就把最后一次参数留到尾沿。",
+          "延迟执行是默认：停止触发 wait 毫秒后调用，用的是最后一次的参数。立即执行把第一次点击马上跑掉，然后在冷却期内忽略后续触发，适合提交按钮。搜索框用延迟，按钮防连点用立即。",
+          "cancel 用来在组件卸载或输入被清空时丢掉还没执行的那次。节流同理分首沿和尾沿：滚动中要周期性反馈用首沿，拖拽结束再结算用尾沿。",
           "React 里注意每次渲染函数会重建，定时器要用 useRef 保存，或把防抖后的函数用 useMemo 稳定住。",
         ],
       },
       {
         type: "code",
         lang: "ts",
-        code: "function debounce<T extends (...args: any[]) => void>(fn: T, wait = 300) {\n  let timer: ReturnType<typeof setTimeout> | null = null;\n  const debounced = (...args: Parameters<T>) => {\n    if (timer) clearTimeout(timer);\n    timer = setTimeout(() => fn(...args), wait);\n  };\n  debounced.cancel = () => {\n    if (timer) clearTimeout(timer);\n    timer = null;\n  };\n  return debounced;\n}\n\nfunction throttle<T extends (...args: any[]) => void>(fn: T, interval = 300) {\n  let last = 0;\n  return (...args: Parameters<T>) => {\n    const now = Date.now();\n    if (now - last >= interval) {\n      last = now;\n      fn(...args);\n    }\n  };\n}",
+        code: "function debounce<T extends (...args: any[]) => void>(fn: T, wait = 300, immediate = false) {\n  let timer: ReturnType<typeof setTimeout> | null = null;\n  const debounced = (...args: Parameters<T>) => {\n    const callNow = immediate && !timer;\n    if (timer) clearTimeout(timer);\n    timer = setTimeout(() => {\n      timer = null;\n      if (!immediate) fn(...args);\n    }, wait);\n    if (callNow) fn(...args);\n  };\n  debounced.cancel = () => {\n    if (timer) clearTimeout(timer);\n    timer = null;\n  };\n  return debounced;\n}\n\nfunction throttle<T extends (...args: any[]) => void>(fn: T, interval = 300) {\n  let last = 0;\n  let timer: ReturnType<typeof setTimeout> | null = null;\n  let pending: Parameters<T> | null = null;\n  const throttled = (...args: Parameters<T>) => {\n    const now = Date.now();\n    const remain = interval - (now - last);\n    pending = args;\n    if (remain <= 0) {\n      if (timer) clearTimeout(timer);\n      timer = null;\n      last = now;\n      pending = null;\n      fn(...args);\n    } else if (!timer) {\n      timer = setTimeout(() => {\n        last = Date.now();\n        timer = null;\n        const argsToUse = pending;\n        pending = null;\n        if (argsToUse) fn(...argsToUse);\n      }, remain);\n    }\n  };\n  return throttled;\n}",
       },
     ],
-    followUps: ["lodash 的 debounce trailing 和 leading 选项分别控制什么？"],
+    followUps: ["立即执行的防抖，冷却期内卸载组件时，已经发出的那次调用怎么处理？"],
   },
   {
     id: "fe-hand-clone",

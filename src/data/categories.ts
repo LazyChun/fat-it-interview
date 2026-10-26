@@ -9,7 +9,7 @@ export interface CategoryNode {
 }
 
 export const CATEGORY_TREE: CategoryNode[] = [
-  { id: "frontend", title: "Web 前端", blurb: "HTML、CSS、JavaScript、React、Vue、工程化与 AI 应用" },
+  { id: "frontend", title: "Web 前端", blurb: "HTML、CSS、JavaScript、React、Vue、工程化、安全与场景设计" },
   { id: "fe-html", title: "HTML", blurb: "语义化、资源加载", parentId: "frontend" },
   { id: "fe-css", title: "CSS", blurb: "布局与格式化上下文", parentId: "frontend" },
   { id: "fe-js", title: "JavaScript", blurb: "语言机制与异步", parentId: "frontend" },
@@ -26,6 +26,7 @@ export const CATEGORY_TREE: CategoryNode[] = [
   { id: "fe-eng", title: "工程化", blurb: "Tree-shaking、微前端与监控", parentId: "frontend" },
   { id: "fe-security", title: "Web 安全", blurb: "XSS 与 CSRF", parentId: "frontend" },
   { id: "fe-ai", title: "AI 工程", blurb: "RAG、MCP、Prompt 与流式界面", parentId: "frontend" },
+  { id: "fe-design", title: "设计题", blurb: "控制台、实时通道与降级", parentId: "frontend" },
 
   { id: "java", title: "Java", blurb: "JVM、集合、并发与 Spring" },
   { id: "java-jvm", title: "JVM", blurb: "内存与垃圾回收", parentId: "java" },

@@ -8,6 +8,7 @@ import { frontendHotQuestions } from "./frontend-hot";
 import { frontendMoreQuestions } from "./frontend-more";
 import { frontendQuestions } from "./frontend";
 import { frontendStateQuestions } from "./frontend-state";
+import { frontendUnitreeQuestions } from "./frontend-unitree";
 import { frontendViteQuestions } from "./frontend-vite";
 import { javaQuestions } from "./java";
 import { networkQuestions } from "./network";
@@ -24,6 +25,7 @@ export const QUESTIONS: Question[] = [
   ...frontendStateQuestions,
   ...frontendAiQuestions,
   ...frontendViteQuestions,
+  ...frontendUnitreeQuestions,
   ...javaQuestions,
   ...backendQuestions,
   ...opsQuestions,
