@@ -1,3 +1,5 @@
+import type { CodeSamples } from "./codeSamples";
+
 export type Difficulty = "easy" | "medium" | "hard";
 
 export type CategoryId =
@@ -14,7 +16,9 @@ export type AnswerPart =
   | { type: "h"; text: string }
   | { type: "p"; text: string }
   | { type: "list"; items: string[] }
-  | { type: "code"; lang: string; code: string };
+  | { type: "code"; lang: string; code: string }
+  /** 多语言代码示例，可在代码块头部自由切换语言 */
+  | { type: "samples"; samples: CodeSamples; title?: string };
 
 export interface Question {
   id: string;

@@ -228,6 +228,34 @@ export interface BlockDataConfigDef {
   render: () => ReactNode;
 }
 
+/**
+ * 给 AI 的卡片配置格式说明。随 registerBlockType 同步到宿主 MCP「查询卡片配置说明」。
+ * 只能放可 JSON 序列化的数据。
+ */
+export interface BlockConfigDoc {
+  type: string;
+  title: string;
+  summary: string;
+  category?: string;
+  keywords?: string[];
+  layout?: { w?: number; h?: number; description?: string };
+  sections?: Array<{
+    key: "options" | "reqParams" | "commonOptions" | string;
+    description: string;
+    fields?: Array<{
+      path: string;
+      name: string;
+      dataType: string;
+      required?: boolean;
+      description?: string;
+      enum?: Array<string | number | boolean>;
+      default?: unknown;
+    }>;
+    example?: unknown;
+  }>;
+  notes?: string[];
+}
+
 export interface BlockTypeDef {
   type: string;
   title: string;
@@ -274,6 +302,8 @@ export interface BlockTypeDef {
    * 字符串为触发 id（展示文案走 action.trigger.type.{id}），对象可自带 title。
    */
   triggers?: Array<string | BlockActionTriggerDef>;
+  /** 给 AI 的配置格式说明。注册卡片时带上，助手才能查到这张卡片怎么配。 */
+  configDoc?: BlockConfigDoc;
 }
 
 export interface SettingsPageDef {

@@ -3,11 +3,17 @@ import type { FatNotesPluginSDK } from "fat-notes-sdk";
 import { Button, Empty, Input, Segmented, Switch, Tag } from "antd";
 import AlgoPlayer from "../components/AlgoPlayer";
 import AnswerView from "../components/AnswerView";
+import { setCodeLang } from "../codeLang";
 import { getCategory, parentOf } from "../data/categories";
+import {
+  CODE_LANGS,
+  CODE_LANG_META,
+  type CodeLang,
+} from "../data/codeSamples";
 import { answerToText } from "../data/format";
 import { getQuestion, neighbors, questionsForNode } from "../data/questions";
 import { DIFFICULTY_META, type Difficulty } from "../data/types";
-import { useTick } from "../hooks";
+import { useCodeLang, useTick } from "../hooks";
 import {
   getProgress,
   isMastered,
@@ -27,6 +33,7 @@ interface Props {
 
 const PracticePage: React.FC<Props> = ({ sdk, categoryId, questionId }) => {
   const tick = useTick();
+  const codeLang = useCodeLang();
   const category = getCategory(categoryId);
   const question = questionId ? getQuestion(questionId) : null;
   const [keyword, setKeyword] = useState("");
@@ -75,7 +82,7 @@ const PracticePage: React.FC<Props> = ({ sdk, categoryId, questionId }) => {
   const copyAnswer = async () => {
     if (!question) return;
     try {
-      await navigator.clipboard.writeText(answerToText(question));
+      await navigator.clipboard.writeText(answerToText(question, codeLang));
       sdk.ui.toast.success("已复制答案");
     } catch {
       sdk.ui.toast.error("复制失败");
@@ -204,6 +211,32 @@ const PracticePage: React.FC<Props> = ({ sdk, categoryId, questionId }) => {
                 {isReview(question.id) ? "移出复习" : "加入复习"}
               </Button>
               {visible ? <Button onClick={copyAnswer}>复制答案</Button> : null}
+              {visible &&
+              question.parts.some((part) => part.type === "samples") ? (
+                <>
+                  <span style={{ flex: 1 }} />
+                  <span
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      fontSize: 12,
+                      opacity: 0.65,
+                    }}
+                  >
+                    代码语言
+                  </span>
+                  <Segmented
+                    size="small"
+                    style={{ flexShrink: 0 }}
+                    value={codeLang}
+                    onChange={(value) => setCodeLang(value as CodeLang)}
+                    options={CODE_LANGS.map((id) => ({
+                      label: CODE_LANG_META[id].short,
+                      value: id,
+                    }))}
+                  />
+                </>
+              ) : null}
             </div>
             {visible ? (
               <AnswerView parts={question.parts} />

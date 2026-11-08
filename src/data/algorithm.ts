@@ -1,6 +1,7 @@
-import type { Question } from "./types";
+import { ALGORITHM_CODE } from "./algorithmCode";
+import type { AnswerPart, Question } from "./types";
 
-export const algorithmQuestions: Question[] = [
+const baseQuestions: Question[] = [
   {
     id: "algo-bubble",
     category: "algorithm",
@@ -474,3 +475,17 @@ export const algorithmQuestions: Question[] = [
     demoId: "cycle",
   },
 ];
+
+/**
+ * 每道算法题在答案末尾追加可切换语言的参考实现。
+ * 原来零散的单语言 code 片段由五语言版本取代。
+ */
+export const algorithmQuestions: Question[] = baseQuestions.map((question) => {
+  const samples = ALGORITHM_CODE[question.id];
+  if (!samples) return question;
+  const parts: AnswerPart[] = question.parts.filter(
+    (part) => part.type !== "code",
+  );
+  parts.push({ type: "samples", samples, title: "代码示例" });
+  return { ...question, parts };
+});

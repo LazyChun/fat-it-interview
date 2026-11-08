@@ -59,6 +59,9 @@ const AnswerView: React.FC<{ parts: AnswerPart[] }> = ({ parts }) => {
             </ul>
           );
         }
+        if (part.type === "samples") {
+          return <CodeBlock key={index} samples={part.samples} title={part.title} />;
+        }
         return <CodeBlock key={index} lang={part.lang} code={part.code} />;
       })}
     </div>

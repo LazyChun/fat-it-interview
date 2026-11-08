@@ -89,6 +89,7 @@ module.exports = (_, argv) => {
       new HtmlWebpackPlugin({ template: "./public/index.html" }),
       // Monaco editor workers/language chunks. Languages trimmed to those used
       // by interview answers (+ likely future ones) to keep dist small.
+      // cpp / go / rust are required by the algorithm code samples.
       new MonacoWebpackPlugin({
         languages: [
           "javascript",
@@ -99,6 +100,9 @@ module.exports = (_, argv) => {
           "json",
           "java",
           "python",
+          "cpp",
+          "go",
+          "rust",
           "sql",
           "shell",
         ],

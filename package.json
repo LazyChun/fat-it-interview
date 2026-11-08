@@ -1,6 +1,6 @@
 {
   "name": "fat-it-interview",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "FatNotes bespoke plugin: IT 面试题库",
   "private": true,
   "scripts": {

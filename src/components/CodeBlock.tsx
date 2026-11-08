@@ -2,8 +2,17 @@ import React, { useCallback, useMemo, useRef, useState } from "react";
 import Editor, { loader } from "@monaco-editor/react";
 import type { Monaco } from "@monaco-editor/react";
 import type { editor } from "monaco-editor";
-import { Button, theme as antdTheme } from "antd";
+import { Button, Segmented, theme as antdTheme } from "antd";
 import type { CSSProperties } from "react";
+import { setCodeLang } from "../codeLang";
+import {
+  CODE_LANG_META,
+  availableLangs,
+  pickSample,
+  type CodeLang,
+  type CodeSamples,
+} from "../data/codeSamples";
+import { useCodeLang } from "../hooks";
 
 /*
  * 使用本地打包的 monaco-editor（配合 monaco-editor-webpack-plugin 提供 worker），
@@ -15,6 +24,10 @@ loader.config({ monaco });
 
 const LINE_HEIGHT = 20;
 const V_PADDING = 10;
+
+function estimateHeight(source: string): number {
+  return Math.max(source.split("\n").length, 1) * LINE_HEIGHT + V_PADDING * 2;
+}
 
 /** 展示用语言名映射 */
 const LANG_LABELS: Record<string, string> = {
@@ -36,6 +49,12 @@ const LANG_LABELS: Record<string, string> = {
   bash: "Shell",
   sh: "Shell",
   http: "HTTP",
+  go: "Go",
+  rust: "Rust",
+  c: "C",
+  cpp: "C++",
+  yaml: "YAML",
+  yml: "YAML",
 };
 
 /*
@@ -70,6 +89,7 @@ const MONACO_LANGS: Record<string, string> = {
   md: "markdown",
   markdown: "markdown",
   go: "go",
+  rust: "rust",
   c: "c",
   cpp: "cpp",
 };
@@ -250,22 +270,49 @@ const CheckIcon = ({ style }: { style?: CSSProperties }) => (
 );
 
 interface CodeBlockProps {
-  lang: string;
-  code: string;
+  /** 单语言代码（旧数据） */
+  lang?: string;
+  code?: string;
+  /** 多语言示例；存在时头部显示语言切换 */
+  samples?: CodeSamples;
+  /** 头部左侧的说明文字 */
+  title?: string;
 }
 
-const CodeBlock: React.FC<CodeBlockProps> = ({ lang, code }) => {
+const CodeBlock: React.FC<CodeBlockProps> = ({ lang, code, samples, title }) => {
   const { token } = antdTheme.useToken();
   const dark = isDarkBg(token.colorBgBase);
+  const preferred = useCodeLang();
+  const langs = useMemo(() => (samples ? availableLangs(samples) : []), [samples]);
+  const picked = useMemo(
+    () => (samples ? pickSample(samples, preferred) : null),
+    [samples, preferred],
+  );
+  const isMulti = langs.length > 0;
+  const activeLang = picked?.lang ?? null;
+  const activeCode = isMulti ? (picked?.code ?? "") : (code ?? "");
+
+  const label =
+    title ??
+    (isMulti && activeLang
+      ? CODE_LANG_META[activeLang].label
+      : LANG_LABELS[(lang ?? "").toLowerCase()] ?? (lang ?? "").toUpperCase());
+  const monacoLang =
+    isMulti && activeLang
+      ? CODE_LANG_META[activeLang].monaco
+      : MONACO_LANGS[(lang ?? "").toLowerCase()] ?? (lang ?? "plaintext");
+
   const [copied, setCopied] = useState(false);
   const timerRef = useRef<number | null>(null);
+  const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
   // 初始高度按行数估算，避免 Monaco 加载完成后高度跳变
-  const [height, setHeight] = useState(
-    () => Math.max(code.split("\n").length, 1) * LINE_HEIGHT + V_PADDING * 2,
-  );
+  const [height, setHeight] = useState(() => estimateHeight(activeCode));
 
-  const label = LANG_LABELS[lang?.toLowerCase()] ?? (lang || "").toUpperCase();
-  const monacoLang = MONACO_LANGS[lang?.toLowerCase()] ?? (lang || "plaintext");
+  // 切换语言后重新量高：不同语言的行数可能不一样
+  React.useEffect(() => {
+    setHeight(editorRef.current?.getContentHeight() ?? estimateHeight(activeCode));
+    setCopied(false);
+  }, [activeCode]);
 
   const handleBeforeMount = useCallback((mon: Monaco) => {
     defineDisplayThemes(mon);
@@ -273,17 +320,18 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ lang, code }) => {
   }, []);
 
   const handleMount = useCallback((ed: editor.IStandaloneCodeEditor) => {
+    editorRef.current = ed;
     setHeight(ed.getContentHeight());
     ed.onDidContentSizeChange((e) => setHeight(e.contentHeight));
   }, []);
 
   const handleCopy = useCallback(async () => {
-    const ok = await copyText(code);
+    const ok = await copyText(activeCode);
     if (!ok) return;
     setCopied(true);
     if (timerRef.current !== null) window.clearTimeout(timerRef.current);
     timerRef.current = window.setTimeout(() => setCopied(false), 1600);
-  }, [code]);
+  }, [activeCode]);
 
   React.useEffect(
     () => () => {
@@ -325,13 +373,35 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ lang, code }) => {
       }}
     >
       <div style={headerStyle}>
-        <span style={labelStyle}>{label}</span>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            minWidth: 0,
+            flexWrap: "wrap",
+          }}
+        >
+          <span style={labelStyle}>{label}</span>
+          {isMulti ? (
+            <Segmented
+              size="small"
+              style={{ flexShrink: 0 }}
+              value={activeLang ?? undefined}
+              onChange={(value) => setCodeLang(value as CodeLang)}
+              options={langs.map((id) => ({
+                label: CODE_LANG_META[id].short,
+                value: id,
+              }))}
+            />
+          ) : null}
+        </div>
         <Button
           size="small"
           type="text"
           onClick={handleCopy}
           icon={copied ? <CheckIcon /> : <CopyIcon />}
-          style={copied ? { color: token.colorSuccess } : undefined}
+          style={{ flex: "none", ...(copied ? { color: token.colorSuccess } : {}) }}
         >
           {copied ? "已复制" : "复制"}
         </Button>
@@ -339,7 +409,7 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ lang, code }) => {
       <Editor
         height={height}
         language={monacoLang}
-        value={code}
+        value={activeCode}
         theme={dark ? "fn-code-dark" : "fn-code-light"}
         beforeMount={handleBeforeMount}
         onMount={handleMount}

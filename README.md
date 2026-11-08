@@ -12,6 +12,12 @@
 
 冒泡、选择、插入、快排、归并、堆排、二分与左边界、双指针、滑动窗口、移动零、BFS、DFS、反转链表、判环、0/1 背包、爬楼梯、最大子数组和、最长公共子序列、中序与层序。可以改输入、单步、调速度。
 
+## 代码示例
+
+算法分类的 21 道题都带 JavaScript / TypeScript / Java / Python / C++ / Go / Rust 七种参考实现。答案末尾的代码块头部可以直接切换语言，练习页按钮行还有全局「代码语言」切换：切一次，所有题目同步生效，选择记在本机 `localStorage`。复制代码块、复制答案都只复制当前选中的语言。
+
+前五种语言按题型放在 `src/data/algorithmCode.{sort,struct,dp}.ts`，Go / Rust 各自一份 `algorithmCode.go.ts` / `algorithmCode.rust.ts`，由 `algorithmCode.ts` 汇总并校验题目齐全；语言定义、顺序和缺失兜底在 `src/data/codeSamples.ts`。Monaco 的语言列表里注册了 `cpp` / `go` / `rust`，三者都有语法高亮。Java 片段默认写在类里、标准库已导入；C++ 片段按 C++17、默认已有常用头文件和 `using namespace std`；Go 片段只用到标准库，Rust 片段按 Rust 2021、只依赖标准库。
+
 ## 在 FatNotes 里的位置
 
 和 `fat-tools` 一样走宿主的插件贡献点：

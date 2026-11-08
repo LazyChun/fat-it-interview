@@ -2,7 +2,7 @@
   "id": "7e2c9a14-6b58-4f3d-a1e0-9c8d4b7f2a61",
   "name": "fat-it-interview",
   "displayName": "IT 面试题库",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "IT 面试题库：Web 前端、Java、后端、运维、算法、数据库、网络与操作系统，部分算法可逐步演示。",
   "entry": "remoteEntry.js",
   "main": "dist/remoteEntry.js",
@@ -18,8 +18,13 @@
     "routes": true,
     "widgetTypes": true
   },
-  "permissions": ["auth:read"],
+  "permissions": [
+    "auth:read"
+  ],
   "backend": {
     "enabled": false
+  },
+  "engines": {
+    "fat-notes": ">=0.1.0"
   }
 }

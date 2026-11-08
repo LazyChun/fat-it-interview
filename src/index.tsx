@@ -170,6 +170,18 @@ export async function activate(sdk: FatNotesPluginSDK): Promise<void> {
       index: 20,
       defaultSize: { w: 4, h: 12, minW: 3, minH: 8 },
       dataConfig: false,
+      configDoc: {
+        type: "fat-it-interview.daily",
+        title: "今日面试题",
+        summary: "展示一道面试题。没有私有配置，属性留空对象。不使用数据查询。",
+        category: "other",
+        keywords: ["面试题", "今日面试题", "面试"],
+        layout: { w: 4, h: 12, description: "网格单位。画布 24 列，行高 8px。" },
+        sections: [
+          { key: "options", description: "没有私有字段。", example: {} },
+          { key: "reqParams", description: "不查询数据源。", example: { queries: [] } },
+        ],
+      },
       render: () => React.createElement(DailyQuestionBlock, { sdk }),
     }),
   );
@@ -183,6 +195,18 @@ export async function activate(sdk: FatNotesPluginSDK): Promise<void> {
       index: 21,
       defaultSize: { w: 6, h: 16, minW: 4, minH: 10 },
       dataConfig: false,
+      configDoc: {
+        type: "fat-it-interview.algo",
+        title: "算法演示",
+        summary: "逐步演示算法。没有私有配置，属性留空对象。不使用数据查询。",
+        category: "other",
+        keywords: ["算法", "算法演示"],
+        layout: { w: 6, h: 16, description: "网格单位。画布 24 列，行高 8px。" },
+        sections: [
+          { key: "options", description: "没有私有字段。", example: {} },
+          { key: "reqParams", description: "不查询数据源。", example: { queries: [] } },
+        ],
+      },
       render: () => React.createElement(AlgoBlock, { sdk }),
     }),
   );
