@@ -8,6 +8,7 @@ import reactUmd from "fat-react-umd";
 import reactDomUmd from "fat-react-dom-umd";
 import lodashUmd from "fat-lodash-umd";
 import antdUmd from "fat-antd-sandbox";
+import { shouldAdoptSavedText } from "../editorDraftSync";
 import { compileLess } from "./compileLess";
 import { readReactPlay } from "./defaultSource";
 import { configureReactPlayMonaco } from "./editorTypes";
@@ -142,6 +143,9 @@ const ReactPlayBlock: React.FC<{ sdk: FatNotesPluginSDK } & BlockRenderProps> = 
   const lessDraftRef = useRef(lessDraft);
   const seenSavedRef = useRef(savedSource);
   const seenLessRef = useRef(savedLess);
+  // 配置抽屉预览有防抖，刚提交的文本会晚一拍回来。记下提交内容，避免回声覆盖新输入。
+  const persistedSourceRef = useRef(savedSource);
+  const persistedLessRef = useRef(savedLess);
   const saveTimer = useRef<number | undefined>(undefined);
   const runningTimer = useRef<number | undefined>(undefined);
   const blockId = String(item?.id || "");
@@ -237,6 +241,8 @@ const ReactPlayBlock: React.FC<{ sdk: FatNotesPluginSDK } & BlockRenderProps> = 
     const next = readReactPlay(config);
     seenSavedRef.current = next.source;
     seenLessRef.current = next.less;
+    persistedSourceRef.current = next.source;
+    persistedLessRef.current = next.less;
     setDraft(next.source);
     setLessDraft(next.less);
     draftRef.current = next.source;
@@ -249,9 +255,10 @@ const ReactPlayBlock: React.FC<{ sdk: FatNotesPluginSDK } & BlockRenderProps> = 
   useEffect(() => {
     if (savedSource === seenSavedRef.current) return;
     seenSavedRef.current = savedSource;
-    if (savedSource === draftRef.current) return;
+    if (!shouldAdoptSavedText(savedSource, draftRef.current, persistedSourceRef.current)) return;
     setDraft(savedSource);
     draftRef.current = savedSource;
+    persistedSourceRef.current = savedSource;
     writeEditor(editorRef.current, savedSource);
     const relayout = () => editorRef.current?.layout();
     relayout();
@@ -261,9 +268,10 @@ const ReactPlayBlock: React.FC<{ sdk: FatNotesPluginSDK } & BlockRenderProps> = 
   useEffect(() => {
     if (savedLess === seenLessRef.current) return;
     seenLessRef.current = savedLess;
-    if (savedLess === lessDraftRef.current) return;
+    if (!shouldAdoptSavedText(savedLess, lessDraftRef.current, persistedLessRef.current)) return;
     setLessDraft(savedLess);
     lessDraftRef.current = savedLess;
+    persistedLessRef.current = savedLess;
     writeEditor(lessEditorRef.current, savedLess);
     const relayout = () => lessEditorRef.current?.layout();
     relayout();
@@ -332,6 +340,8 @@ const ReactPlayBlock: React.FC<{ sdk: FatNotesPluginSDK } & BlockRenderProps> = 
     if (!current) return;
     const prev = readReactPlay(current.options);
     if (prev.source === source && prev.less === lessSource) return;
+    persistedSourceRef.current = source;
+    persistedLessRef.current = lessSource;
     const nextPlay = { ...prev, source, less: lessSource };
     const options = {
       ...(current.options || {}),
