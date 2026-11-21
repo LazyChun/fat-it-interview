@@ -104,6 +104,13 @@ const BOOT = String.raw`
     if (data.kind !== "render") return;
     window.__fatRunId = data.id || 0;
     var rootEl = document.getElementById("root");
+    var styleEl = document.getElementById("fat-less");
+    if (!styleEl) {
+      styleEl = document.createElement("style");
+      styleEl.id = "fat-less";
+      document.head.appendChild(styleEl);
+    }
+    if (typeof data.css === "string") styleEl.textContent = data.css;
     try {
       if (!window.React || !window.ReactDOM || typeof window.ReactDOM.createRoot !== "function") {
         throw new Error("React 运行时没有加载");

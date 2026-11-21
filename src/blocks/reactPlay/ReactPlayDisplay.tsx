@@ -16,7 +16,7 @@ interface EditBlock {
 }
 
 /**
- * 配置抽屉右侧，对齐代码卡片：主题、是否显示控制台、控制台位置，以及卡片外框。
+ * 配置抽屉右侧：主题、控制台、Less 编辑器，以及卡片外框。
  */
 const ReactPlayDisplay: React.FC<{ sdk: FatNotesPluginSDK }> = ({ sdk }) => {
   const common = sdk.remoteComponents.BlockConfigCommon;
@@ -91,8 +91,13 @@ const ReactPlayDisplay: React.FC<{ sdk: FatNotesPluginSDK }> = ({ sdk }) => {
               </Radio.Group>
             </FatForm.Item>
           </DisplayBox>
+          <DisplayBox>
+            <FatForm.Item label={<DisplayHighLight>显示 Less</DisplayHighLight>}>
+              <Switch checked={play.showLess} onChange={(checked) => patch({ showLess: checked })} />
+            </FatForm.Item>
+          </DisplayBox>
           <div className="fat-react-play-display-hint">
-            深色和浅色只作用在代码编辑器和控制台。预览页保持白底，颜色以组件自己的样式为准。控制台在下侧时放在代码下面，在右侧时放在页面下面。
+            深色和浅色只作用在代码编辑器和控制台。预览页保持白底。打开「显示 Less」后可以写样式，运行时编译进预览页，用 className 挂到组件上。控制台在下侧时放在代码下面，在右侧时放在页面下面。
           </div>
         </FatForm>
       </DisplayCollapse>

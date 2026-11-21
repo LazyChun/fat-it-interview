@@ -27,6 +27,9 @@ export interface ReactPlayOptions {
   theme: ReactPlayTheme;
   showConsole: boolean;
   consolePlacement: ReactPlayConsolePlacement;
+  /** 为 true 时才显示 Less 编辑器。已保存的样式在关闭编辑器后仍然生效。 */
+  showLess: boolean;
+  less: string;
 }
 
 export const DEFAULT_REACT_PLAY: ReactPlayOptions = {
@@ -34,6 +37,8 @@ export const DEFAULT_REACT_PLAY: ReactPlayOptions = {
   theme: "dark",
   showConsole: true,
   consolePlacement: "bottom",
+  showLess: false,
+  less: "",
 };
 
 export function readReactPlay(config: unknown): ReactPlayOptions {
@@ -46,6 +51,8 @@ export function readReactPlay(config: unknown): ReactPlayOptions {
     theme: raw?.theme === "light" ? "light" : "dark",
     showConsole: raw?.showConsole !== false,
     consolePlacement: raw?.consolePlacement === "right" ? "right" : "bottom",
+    showLess: raw?.showLess === true,
+    less: typeof raw?.less === "string" ? raw.less : "",
   };
 }
 

@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
+    "less": "^4.4.2",
     "lodash": "4.18.1",
     "monaco-editor": "^0.55.1",
     "react": "18.2.0",

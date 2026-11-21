@@ -4,6 +4,7 @@ import {
   readReactPlay,
   readReactSource,
 } from "../src/blocks/reactPlay/defaultSource";
+import { compileLess } from "../src/blocks/reactPlay/compileLess";
 import { prepareReactSource } from "../src/blocks/reactPlay/prepare";
 import { buildReactSandboxHtml } from "../src/blocks/reactPlay/sandboxHtml";
 
@@ -129,22 +130,62 @@ describe("readReactPlay", () => {
       theme: "dark",
       showConsole: true,
       consolePlacement: "bottom",
+      showLess: false,
+      less: "",
     });
   });
 
-  it("keeps a saved theme, console switch, and placement", () => {
+  it("keeps a saved theme, console switch, placement, and less", () => {
     const play = readReactPlay({
       reactPlay: {
         source: "function App(){ return null }",
         theme: "light",
         showConsole: false,
         consolePlacement: "right",
+        showLess: true,
+        less: ".title { color: red; }",
       },
     });
     expect(play.source).toContain("function App");
     expect(play.theme).toBe("light");
     expect(play.showConsole).toBe(false);
     expect(play.consolePlacement).toBe("right");
+    expect(play.showLess).toBe(true);
+    expect(play.less).toContain(".title");
+  });
+
+  it("keeps the less editor hidden unless the flag is true", () => {
+    expect(readReactPlay({ reactPlay: { showLess: false } }).showLess).toBe(false);
+    expect(readReactPlay({ reactPlay: {} }).showLess).toBe(false);
+  });
+});
+
+describe("compileLess", () => {
+  it("compiles variables and nesting into class selectors", async () => {
+    const css = await compileLess(`
+      @brand: #1677ff;
+      .card {
+        color: @brand;
+        .title { font-weight: 600; }
+        &:hover { opacity: 0.8; }
+      }
+    `);
+    expect(css).toContain("color: #1677ff");
+    expect(css).toContain(".card .title");
+    expect(css).toContain(".card:hover");
+  });
+
+  it("returns empty css for blank input", async () => {
+    expect(await compileLess("  \n")).toBe("");
+  });
+
+  it("rejects imports and plugins", async () => {
+    await expect(compileLess('@import "theme.less";')).rejects.toThrow(/@import/);
+    await expect(compileLess('@plugin "x";')).rejects.toThrow(/@plugin/);
+  });
+
+  it("reports a less syntax error with the line number", async () => {
+    await expect(compileLess(".card { color: red")).rejects.toThrow(/Less 第/);
   });
 });
 
@@ -164,6 +205,8 @@ describe("buildReactSandboxHtml", () => {
     expect(html).toContain('id="root"');
     expect(html).toContain("fat-react-play");
     expect(html).toContain("createRoot");
+    expect(html).toContain("fat-less");
+    expect(html).toContain("data.css");
     const scripts = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((item) => item[1]);
     expect(scripts).toHaveLength(5);
     expect(() => new Function(scripts[4])).not.toThrow();

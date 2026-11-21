@@ -248,14 +248,15 @@ export async function activate(sdk: FatNotesPluginSDK): Promise<void> {
         type: "fat-it-interview.react",
         title: "React 渲染",
         summary:
-          "三栏卡片：代码、控制台、页面。用户编写 function App 或 export default 组件，运行后在沙箱页面里渲染。不使用数据查询。",
+          "三栏卡片：代码、控制台、页面。用户编写 function App 或 export default 组件，运行后在沙箱页面里渲染。可选 Less 样式。不使用数据查询。",
         category: IT_INTERVIEW_BLOCK_CATEGORY,
         keywords: ["React", "JSX", "渲染", "代码", "预览", "面试"],
         layout: { w: 18, h: 48, description: "网格单位。画布 24 列，行高 8px。" },
         sections: [
           {
             key: "options",
-            description: "代码和展示选项都在 reactPlay。预览只提供 React 和 ReactDOM。",
+            description:
+              "代码和展示选项都在 reactPlay。预览提供 React、ReactDOM、lodash 和 antd。Less 编辑器默认关闭。",
             fields: [
               {
                 path: "reactPlay.source",
@@ -287,6 +288,21 @@ export async function activate(sdk: FatNotesPluginSDK): Promise<void> {
                 default: "bottom",
                 description: "bottom 在代码下侧，right 在页面下侧。",
               },
+              {
+                path: "reactPlay.showLess",
+                name: "显示 Less",
+                dataType: "boolean",
+                default: false,
+                description: "为 true 时显示 Less 编辑器。默认关闭。",
+              },
+              {
+                path: "reactPlay.less",
+                name: "Less 样式",
+                dataType: "string",
+                default: "",
+                description:
+                  "Less 源码。运行时编译成 CSS，作用在预览页。组件用 className 引用类名。不支持 @import 和 @plugin。",
+              },
             ],
             example: { reactPlay: DEFAULT_REACT_PLAY },
           },
@@ -295,7 +311,8 @@ export async function activate(sdk: FatNotesPluginSDK): Promise<void> {
         notes: [
           "页面在不带同源权限的 iframe 里渲染，读不到宿主页面和本地存储。",
           "预览里可以 import react、react-dom、lodash 和 antd。其它包和图标包不可用。",
-          "点运行或按 Ctrl+Enter 后才会重新渲染。",
+          "点运行或按 Ctrl+Enter 后才会重新渲染。Less 也在这时编译进预览页。",
+          "Less 编辑器默认不显示，在卡片配置里打开「显示 Less」。",
         ],
       },
       render: (props) => React.createElement(ReactPlayBlock, { sdk, ...props }),

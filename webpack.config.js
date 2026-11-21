@@ -124,6 +124,7 @@ module.exports = (_, argv) => {
           "javascript",
           "typescript",
           "css",
+          "less",
           "html",
           "xml",
           "json",

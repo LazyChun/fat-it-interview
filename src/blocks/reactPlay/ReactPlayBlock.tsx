@@ -8,6 +8,7 @@ import reactUmd from "fat-react-umd";
 import reactDomUmd from "fat-react-dom-umd";
 import lodashUmd from "fat-lodash-umd";
 import antdUmd from "fat-antd-sandbox";
+import { compileLess } from "./compileLess";
 import { readReactPlay } from "./defaultSource";
 import { configureReactPlayMonaco } from "./editorTypes";
 import { prepareReactSource } from "./prepare";
@@ -38,6 +39,11 @@ const EDITOR_OPTIONS: monaco.editor.IStandaloneEditorConstructionOptions = {
   padding: { top: 8 },
 };
 
+const LESS_EDITOR_OPTIONS: monaco.editor.IStandaloneEditorConstructionOptions = {
+  ...EDITOR_OPTIONS,
+  placeholder: "用 className 引用。例如 .title { color: #1677ff; }",
+};
+
 interface PlayLog {
   level: "log" | "info" | "warn" | "error" | "system";
   text: string;
@@ -50,6 +56,48 @@ interface HostDispatch {
 function useHostDispatch(sdk: FatNotesPluginSDK): HostDispatch {
   const hook = sdk.remoteComponents.FlowEditCommon.useAppDispatch as () => HostDispatch;
   return hook();
+}
+
+function writeEditor(editor: monaco.editor.IStandaloneCodeEditor | null, source: string): void {
+  const model = editor?.getModel();
+  if (!editor || !model || model.isDisposed() || model.getValue() === source) return;
+  // setValue 会把光标冲到第 1 行。外部覆盖时把原来的视口和光标放回去。
+  const view = editor.saveViewState();
+  model.setValue(source);
+  if (view) editor.restoreViewState(view);
+}
+
+function attachEditorModel(
+  editor: monaco.editor.IStandaloneCodeEditor,
+  monacoNs: Monaco,
+  uri: monaco.Uri,
+  language: string,
+  source: string,
+): void {
+  const existing = monacoNs.editor.getModel(uri);
+  const model =
+    existing && !existing.isDisposed()
+      ? existing
+      : monacoNs.editor.createModel(source, language, uri);
+  if (model.getValue() !== source) model.setValue(source);
+  const previous = editor.getModel();
+  if (previous !== model) {
+    editor.setModel(model);
+    if (previous && !previous.isDisposed()) previous.dispose();
+  }
+}
+
+function stackPanes(panes: React.ReactNode[], sizes: string[]): React.ReactNode {
+  if (panes.length <= 1) return panes[0] ?? null;
+  return (
+    <Splitter orientation="vertical" style={{ height: "100%" }}>
+      {panes.map((pane, index) => (
+        <Splitter.Panel key={index} defaultSize={sizes[index] || "32%"} min="16%">
+          {pane}
+        </Splitter.Panel>
+      ))}
+    </Splitter>
+  );
 }
 
 function logClassName(level: PlayLog["level"]): string {
@@ -69,7 +117,9 @@ const ReactPlayBlock: React.FC<{ sdk: FatNotesPluginSDK } & BlockRenderProps> = 
   const dispatch = useHostDispatch(sdk);
   const play = readReactPlay(config);
   const savedSource = play.source;
+  const savedLess = play.less;
   const [draft, setDraft] = useState(savedSource);
+  const [lessDraft, setLessDraft] = useState(savedLess);
   const [lines, setLines] = useState<PlayLog[]>([]);
   const [errorText, setErrorText] = useState("");
   const [running, setRunning] = useState(false);
@@ -83,19 +133,21 @@ const ReactPlayBlock: React.FC<{ sdk: FatNotesPluginSDK } & BlockRenderProps> = 
   });
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
+  const lessEditorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const readyRef = useRef(false);
   const runIdRef = useRef(0);
-  const pendingCodeRef = useRef<string | null>(null);
+  const pendingRef = useRef<{ code: string; css: string } | null>(null);
   const itemRef = useRef(item);
   const draftRef = useRef(draft);
-  const savedRef = useRef(savedSource);
+  const lessDraftRef = useRef(lessDraft);
   const seenSavedRef = useRef(savedSource);
+  const seenLessRef = useRef(savedLess);
   const saveTimer = useRef<number | undefined>(undefined);
   const runningTimer = useRef<number | undefined>(undefined);
   const blockId = String(item?.id || "");
   itemRef.current = item;
   draftRef.current = draft;
-  savedRef.current = savedSource;
+  lessDraftRef.current = lessDraft;
 
   const themeConfig = useMemo(
     () => ({
@@ -130,15 +182,27 @@ const ReactPlayBlock: React.FC<{ sdk: FatNotesPluginSDK } & BlockRenderProps> = 
     );
   };
 
-  const run = (source: string) => {
+  const publish = (id: number, code: string, css: string) => {
+    if (runIdRef.current !== id) return;
+    if (!readyRef.current || !iframeRef.current?.contentWindow) {
+      pendingRef.current = { code, css };
+      return;
+    }
+    pendingRef.current = null;
+    postToFrame({ kind: "render", id, code, css });
+  };
+
+  const run = () => {
     const id = runIdRef.current + 1;
     runIdRef.current = id;
+    const source = draftRef.current;
+    const lessSource = lessDraftRef.current;
     let code = "";
     try {
       code = prepareReactSource(source);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      pendingCodeRef.current = null;
+      pendingRef.current = null;
       setRunning(false);
       setErrorText(message);
       setLines([{ level: "error", text: message }]);
@@ -152,33 +216,34 @@ const ReactPlayBlock: React.FC<{ sdk: FatNotesPluginSDK } & BlockRenderProps> = 
       if (runIdRef.current !== id) return;
       setRunning(false);
     }, 8000);
-    if (!readyRef.current || !iframeRef.current?.contentWindow) {
-      pendingCodeRef.current = code;
-      return;
-    }
-    pendingCodeRef.current = null;
-    postToFrame({ kind: "render", id, code });
+    void compileLess(lessSource)
+      .then((css) => {
+        publish(id, code, css);
+      })
+      .catch((error: unknown) => {
+        if (runIdRef.current !== id) return;
+        const message = error instanceof Error ? error.message : String(error);
+        pendingRef.current = null;
+        if (runningTimer.current) window.clearTimeout(runningTimer.current);
+        setRunning(false);
+        setErrorText(message);
+        setLines([{ level: "error", text: message }]);
+      });
   };
   const runRef = useRef(run);
   runRef.current = run;
 
-  const writeEditor = (source: string) => {
-    const editor = editorRef.current;
-    const model = editor?.getModel();
-    if (!editor || !model || model.isDisposed() || model.getValue() === source) return;
-    // setValue 会把光标冲到第 1 行。外部覆盖时把原来的视口和光标放回去。
-    const view = editor.saveViewState();
-    model.setValue(source);
-    if (view) editor.restoreViewState(view);
-  };
-
   useEffect(() => {
-    const next = readReactPlay(config).source;
-    seenSavedRef.current = next;
-    setDraft(next);
-    draftRef.current = next;
-    writeEditor(next);
-    runRef.current(next);
+    const next = readReactPlay(config);
+    seenSavedRef.current = next.source;
+    seenLessRef.current = next.less;
+    setDraft(next.source);
+    setLessDraft(next.less);
+    draftRef.current = next.source;
+    lessDraftRef.current = next.less;
+    writeEditor(editorRef.current, next.source);
+    writeEditor(lessEditorRef.current, next.less);
+    runRef.current();
   }, [blockId]);
 
   useEffect(() => {
@@ -187,11 +252,23 @@ const ReactPlayBlock: React.FC<{ sdk: FatNotesPluginSDK } & BlockRenderProps> = 
     if (savedSource === draftRef.current) return;
     setDraft(savedSource);
     draftRef.current = savedSource;
-    writeEditor(savedSource);
+    writeEditor(editorRef.current, savedSource);
     const relayout = () => editorRef.current?.layout();
     relayout();
     window.requestAnimationFrame(relayout);
   }, [savedSource]);
+
+  useEffect(() => {
+    if (savedLess === seenLessRef.current) return;
+    seenLessRef.current = savedLess;
+    if (savedLess === lessDraftRef.current) return;
+    setLessDraft(savedLess);
+    lessDraftRef.current = savedLess;
+    writeEditor(lessEditorRef.current, savedLess);
+    const relayout = () => lessEditorRef.current?.layout();
+    relayout();
+    window.requestAnimationFrame(relayout);
+  }, [savedLess]);
 
   useEffect(() => {
     const onMessage = (event: MessageEvent) => {
@@ -234,24 +311,28 @@ const ReactPlayBlock: React.FC<{ sdk: FatNotesPluginSDK } & BlockRenderProps> = 
 
   const handleIframeLoad = () => {
     readyRef.current = true;
-    const pending = pendingCodeRef.current;
-    if (pending != null) {
-      pendingCodeRef.current = null;
+    const pending = pendingRef.current;
+    if (pending) {
+      pendingRef.current = null;
       postToFrame({
         kind: "render",
         id: runIdRef.current,
-        code: pending,
+        code: pending.code,
+        css: pending.css,
       });
       return;
     }
-    runRef.current(draftRef.current);
+    runRef.current();
   };
 
-  const persist = (source: string) => {
-    if (source === savedRef.current) return;
+  const persist = () => {
+    const source = draftRef.current;
+    const lessSource = lessDraftRef.current;
     const current = itemRef.current;
     if (!current) return;
-    const nextPlay = { ...readReactPlay(current.options), source };
+    const prev = readReactPlay(current.options);
+    if (prev.source === source && prev.less === lessSource) return;
+    const nextPlay = { ...prev, source, less: lessSource };
     const options = {
       ...(current.options || {}),
       reactPlay: nextPlay,
@@ -276,42 +357,52 @@ const ReactPlayBlock: React.FC<{ sdk: FatNotesPluginSDK } & BlockRenderProps> = 
   const persistRef = useRef(persist);
   persistRef.current = persist;
 
+  const runFromEditor = () => {
+    if (saveTimer.current) {
+      window.clearTimeout(saveTimer.current);
+      persistRef.current();
+    }
+    runRef.current();
+  };
+
   // 编辑器是内容的来源。先写入 ref，避免同一轮渲染用旧草稿把光标覆盖掉。
   const handleChange = useCallback((value: string | undefined) => {
     const next = value ?? "";
     draftRef.current = next;
     setDraft(next);
     if (saveTimer.current) window.clearTimeout(saveTimer.current);
-    saveTimer.current = window.setTimeout(() => persistRef.current(next), 300);
+    saveTimer.current = window.setTimeout(() => persistRef.current(), 300);
+  }, []);
+
+  const handleLessChange = useCallback((value: string | undefined) => {
+    const next = value ?? "";
+    lessDraftRef.current = next;
+    setLessDraft(next);
+    if (saveTimer.current) window.clearTimeout(saveTimer.current);
+    saveTimer.current = window.setTimeout(() => persistRef.current(), 300);
   }, []);
 
   const handleRun = () => {
-    if (saveTimer.current) {
-      window.clearTimeout(saveTimer.current);
-      persist(draftRef.current);
-    }
-    run(draftRef.current);
+    runFromEditor();
+  };
+
+  const editorFileUri = (monacoNs: Monaco, extension: string) => {
+    const safeId = (blockId || "draft").replace(/[^\w-]/g, "_");
+    const surface = inConfig ? "config" : "board";
+    return monacoNs.Uri.parse(`file:///react-play/${safeId}/${surface}.${extension}`);
   };
 
   const handleMount = (editor: monaco.editor.IStandaloneCodeEditor, monacoNs: Monaco) => {
     editorRef.current = editor;
     try {
       configureReactPlayMonaco(monacoNs);
-      const safeId = (blockId || "draft").replace(/[^\w-]/g, "_");
-      const surface = inConfig ? "config" : "board";
-      const uri = monacoNs.Uri.parse(`file:///react-play/${safeId}/${surface}.tsx`);
-      const existing = monacoNs.editor.getModel(uri);
-      const source = draftRef.current;
-      const model =
-        existing && !existing.isDisposed()
-          ? existing
-          : monacoNs.editor.createModel(source, "typescript", uri);
-      if (model.getValue() !== source) model.setValue(source);
-      const previous = editor.getModel();
-      if (previous !== model) {
-        editor.setModel(model);
-        if (previous && !previous.isDisposed()) previous.dispose();
-      }
+      attachEditorModel(
+        editor,
+        monacoNs,
+        editorFileUri(monacoNs, "tsx"),
+        "typescript",
+        draftRef.current,
+      );
     } catch (error) {
       console.error(error);
     }
@@ -322,24 +413,42 @@ const ReactPlayBlock: React.FC<{ sdk: FatNotesPluginSDK } & BlockRenderProps> = 
     relayout();
     window.requestAnimationFrame(relayout);
     editor.addCommand(monacoNs.KeyMod.CtrlCmd | monacoNs.KeyCode.Enter, () => {
-      if (saveTimer.current) {
-        window.clearTimeout(saveTimer.current);
-        persist(draftRef.current);
-      }
-      runRef.current(draftRef.current);
+      runFromEditor();
     });
   };
 
+  const handleLessMount = (editor: monaco.editor.IStandaloneCodeEditor, monacoNs: Monaco) => {
+    lessEditorRef.current = editor;
+    try {
+      attachEditorModel(
+        editor,
+        monacoNs,
+        editorFileUri(monacoNs, "less"),
+        "less",
+        lessDraftRef.current,
+      );
+    } catch (error) {
+      console.error(error);
+    }
+    editor.onDidDispose(() => {
+      if (lessEditorRef.current === editor) lessEditorRef.current = null;
+    });
+    const relayout = () => editor.layout();
+    relayout();
+    window.requestAnimationFrame(relayout);
+    editor.addCommand(monacoNs.KeyMod.CtrlCmd | monacoNs.KeyCode.Enter, () => {
+      runFromEditor();
+    });
+  };
+
+  const editorClass =
+    play.theme === "light"
+      ? "fat-react-play-editor fat-react-play-editor-light"
+      : "fat-react-play-editor";
   const codePane = (
     <div className="fat-react-play-pane">
       <div className="fat-react-play-label">代码</div>
-      <div
-        className={
-          play.theme === "light"
-            ? "fat-react-play-editor fat-react-play-editor-light"
-            : "fat-react-play-editor"
-        }
-      >
+      <div className={editorClass}>
         <Editor
           height="100%"
           language="typescript"
@@ -348,6 +457,22 @@ const ReactPlayBlock: React.FC<{ sdk: FatNotesPluginSDK } & BlockRenderProps> = 
           onChange={handleChange}
           onMount={handleMount}
           options={EDITOR_OPTIONS}
+        />
+      </div>
+    </div>
+  );
+  const lessPane = (
+    <div className="fat-react-play-pane">
+      <div className="fat-react-play-label">Less</div>
+      <div className={editorClass}>
+        <Editor
+          height="100%"
+          language="less"
+          theme={play.theme === "dark" ? "vs-dark" : "vs"}
+          defaultValue={lessDraft}
+          onChange={handleLessChange}
+          onMount={handleLessMount}
+          options={LESS_EDITOR_OPTIONS}
         />
       </div>
     </div>
@@ -396,46 +521,21 @@ const ReactPlayBlock: React.FC<{ sdk: FatNotesPluginSDK } & BlockRenderProps> = 
       </div>
     </div>
   );
-  const layoutKey = `${play.showConsole ? "console" : "plain"}-${play.consolePlacement}`;
-  const body = !play.showConsole ? (
+  const consoleOnRight = play.showConsole && play.consolePlacement === "right";
+  const consoleAtBottom = play.showConsole && !consoleOnRight;
+  const leftPanes = [codePane, ...(play.showLess ? [lessPane] : []), ...(consoleAtBottom ? [consolePane] : [])];
+  const rightPanes = [pagePane, ...(consoleOnRight ? [consolePane] : [])];
+  const leftSizes =
+    play.showLess && consoleAtBottom ? ["48%", "28%", "24%"] : play.showLess ? ["58%", "42%"] : ["68%", "32%"];
+  const rightSizes = ["68%", "32%"];
+  const layoutKey = `${play.showConsole ? "console" : "plain"}-${play.consolePlacement}-${play.showLess ? "less" : "noless"}`;
+  const body = (
     <Splitter key={layoutKey} orientation="horizontal" style={{ height: "100%" }}>
       <Splitter.Panel defaultSize="56%" min="28%">
-        {codePane}
+        {stackPanes(leftPanes, leftSizes)}
       </Splitter.Panel>
       <Splitter.Panel defaultSize="44%" min="22%">
-        {pagePane}
-      </Splitter.Panel>
-    </Splitter>
-  ) : play.consolePlacement === "right" ? (
-    <Splitter key={layoutKey} orientation="horizontal" style={{ height: "100%" }}>
-      <Splitter.Panel defaultSize="56%" min="28%">
-        {codePane}
-      </Splitter.Panel>
-      <Splitter.Panel defaultSize="44%" min="22%">
-        <Splitter orientation="vertical" style={{ height: "100%" }}>
-          <Splitter.Panel defaultSize="68%" min="30%">
-            {pagePane}
-          </Splitter.Panel>
-          <Splitter.Panel defaultSize="32%" min="16%">
-            {consolePane}
-          </Splitter.Panel>
-        </Splitter>
-      </Splitter.Panel>
-    </Splitter>
-  ) : (
-    <Splitter key={layoutKey} orientation="horizontal" style={{ height: "100%" }}>
-      <Splitter.Panel defaultSize="56%" min="28%">
-        <Splitter orientation="vertical" style={{ height: "100%" }}>
-          <Splitter.Panel defaultSize="68%" min="24%">
-            {codePane}
-          </Splitter.Panel>
-          <Splitter.Panel defaultSize="32%" min="16%">
-            {consolePane}
-          </Splitter.Panel>
-        </Splitter>
-      </Splitter.Panel>
-      <Splitter.Panel defaultSize="44%" min="22%">
-        {pagePane}
+        {stackPanes(rightPanes, rightSizes)}
       </Splitter.Panel>
     </Splitter>
   );
@@ -448,7 +548,9 @@ const ReactPlayBlock: React.FC<{ sdk: FatNotesPluginSDK } & BlockRenderProps> = 
             运行
           </Button>
           <span className="fat-react-play-hint">
-            定义 function App()，或 export default 一个组件。Ctrl+Enter 运行。import 和调用时会有补全。
+            {play.showLess
+              ? "定义 function App()，或 export default 一个组件。Ctrl+Enter 运行。Less 编译后用 className 挂到组件上。"
+              : "定义 function App()，或 export default 一个组件。Ctrl+Enter 运行。import 和调用时会有补全。"}
           </span>
         </div>
         <div className="fat-react-play-body">{body}</div>
