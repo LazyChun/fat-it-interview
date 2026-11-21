@@ -68,6 +68,94 @@ const BOOT = `
     var reason = event.reason;
     emit("error", [reason && reason.stack || reason]);
   });
+
+  // 脚本 Promise 结束时，setTimeout / setInterval 多半还在队列里。先记着，清空后再发 done。
+  var pending = 0;
+  var settled = false;
+  var posted = false;
+  var resultPayload = null;
+  var rawSetTimeout = window.setTimeout.bind(window);
+  var rawClearTimeout = window.clearTimeout.bind(window);
+  var rawSetInterval = window.setInterval.bind(window);
+  var rawClearInterval = window.clearInterval.bind(window);
+  var timeoutGuards = Object.create(null);
+  var intervalGuards = Object.create(null);
+
+  function scheduleIdleCheck() {
+    if (!settled || pending > 0 || posted) return;
+    rawSetTimeout(function () {
+      if (!settled || pending > 0 || posted) return;
+      posted = true;
+      post(resultPayload);
+    }, 0);
+  }
+
+  function releaseGuard(bucket, id) {
+    var guard = bucket[id];
+    if (!guard || !guard.alive) return false;
+    guard.alive = false;
+    delete bucket[id];
+    if (pending > 0) pending--;
+    return true;
+  }
+
+  function clearTimer(id) {
+    rawClearTimeout(id);
+    rawClearInterval(id);
+    if (releaseGuard(timeoutGuards, id) || releaseGuard(intervalGuards, id)) {
+      scheduleIdleCheck();
+    }
+  }
+
+  function settle(ok, value, error) {
+    if (posted) return;
+    resultPayload = {
+      type: "fat-js-play",
+      kind: "done",
+      id: currentId,
+      ok: ok,
+      hasResult: ok && value !== undefined,
+      result: !ok || value === undefined ? null : cloneResult(value),
+      error: error || ""
+    };
+    settled = true;
+    scheduleIdleCheck();
+  }
+
+  window.setTimeout = function (handler, timeout) {
+    var args = Array.prototype.slice.call(arguments, 2);
+    var guard = { alive: true };
+    pending++;
+    var id = rawSetTimeout(function () {
+      if (!guard.alive) return;
+      guard.alive = false;
+      try {
+        if (typeof handler === "function") handler.apply(window, args);
+      } finally {
+        if (pending > 0) pending--;
+        scheduleIdleCheck();
+      }
+    }, timeout);
+    timeoutGuards[id] = guard;
+    return id;
+  };
+
+  window.clearTimeout = clearTimer;
+
+  window.setInterval = function (handler, timeout) {
+    var args = Array.prototype.slice.call(arguments, 2);
+    var guard = { alive: true };
+    pending++;
+    var id = rawSetInterval(function () {
+      if (!guard.alive) return;
+      if (typeof handler === "function") handler.apply(window, args);
+    }, timeout);
+    intervalGuards[id] = guard;
+    return id;
+  };
+
+  window.clearInterval = clearTimer;
+
   window.addEventListener("message", function (event) {
     var data = event.data || {};
     if (data.type !== "fat-js-play" || data.kind !== "run") return;
@@ -87,36 +175,12 @@ const BOOT = `
     try {
       var fn = new Function("_", "console", String(data.code || ""));
       Promise.resolve(fn(window._, consoleProxy)).then(function (value) {
-        post({
-          type: "fat-js-play",
-          kind: "done",
-          id: currentId,
-          ok: true,
-          hasResult: value !== undefined,
-          result: value === undefined ? null : cloneResult(value),
-          error: ""
-        });
+        settle(true, value, "");
       }, function (err) {
-        post({
-          type: "fat-js-play",
-          kind: "done",
-          id: currentId,
-          ok: false,
-          hasResult: false,
-          result: null,
-          error: String(err && err.stack || err)
-        });
+        settle(false, null, String(err && err.stack || err));
       });
     } catch (err) {
-      post({
-        type: "fat-js-play",
-        kind: "done",
-        id: currentId,
-        ok: false,
-        hasResult: false,
-        result: null,
-        error: String(err && err.stack || err)
-      });
+      settle(false, null, String(err && err.stack || err));
     }
   });
 })();

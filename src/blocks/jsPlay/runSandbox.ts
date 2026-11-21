@@ -1,6 +1,8 @@
 /**
  * 在不带同源权限的 iframe 里跑用户 JavaScript。
- * 每次运行都是新的 iframe，超时后拆掉页面，避免死循环占住上一次的沙箱。
+ * 每次运行都是新的 iframe。脚本的 Promise 结束后，沙箱会等已登记的
+ * setTimeout / setInterval 跑完再通知完成，否则这些宏任务来不及执行。
+ * 外层超时仍会拆掉页面，避免死循环或未清除的 interval 占住沙箱。
  */
 import { buildJsSandboxHtml, JS_PLAY_MESSAGE } from "./sandboxHtml";
 
