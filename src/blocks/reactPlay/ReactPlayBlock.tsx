@@ -514,7 +514,6 @@ const ReactPlayBlock: React.FC<{ sdk: FatNotesPluginSDK } & BlockRenderProps> = 
   );
   const pagePane = (
     <div className="fat-react-play-pane">
-      <div className="fat-react-play-label">页面</div>
       <div className="fat-react-play-preview">
         {frameHtml ? (
           <iframe

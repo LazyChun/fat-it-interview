@@ -488,7 +488,6 @@ const VuePlayBlock: React.FC<{ sdk: FatNotesPluginSDK } & BlockRenderProps> = ({
   );
   const pagePane = (
     <div className="fat-vue-play-pane">
-      <div className="fat-vue-play-label">页面</div>
       <div className="fat-vue-play-preview">
         {frameHtml ? (
           <iframe
