@@ -52,7 +52,7 @@ const WorkPageView: React.FC<Props> = ({ sdk }) => {
         : undefined;
 
   return (
-    <ThemeShell sdk={sdk} padding={12} scroll>
+    <ThemeShell sdk={sdk} padding={12} scroll={false}>
       <PracticePage sdk={sdk} categoryId={categoryId} questionId={questionId} />
     </ThemeShell>
   );

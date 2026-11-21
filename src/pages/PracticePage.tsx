@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import type { FatNotesPluginSDK } from "fat-notes-sdk";
 import { Button, Empty, Input, Segmented, Switch, Tag } from "antd";
 import AlgoPlayer from "../components/AlgoPlayer";
@@ -40,6 +40,8 @@ const PracticePage: React.FC<Props> = ({ sdk, categoryId, questionId }) => {
   const [level, setLevel] = useState<Difficulty | "all">("all");
   const [onlyOpen, setOnlyOpen] = useState(false);
   const [shown, setShown] = useState(false);
+  const listRef = useRef<HTMLDivElement>(null);
+  const detailRef = useRef<HTMLDivElement>(null);
   const practiceMode = getProgress().practiceMode;
 
   useEffect(() => {
@@ -48,6 +50,18 @@ const PracticePage: React.FC<Props> = ({ sdk, categoryId, questionId }) => {
 
   useEffect(() => {
     setShown(false);
+    const scroller = listRef.current;
+    const active = scroller?.querySelector<HTMLElement>("[data-active='true']");
+    if (scroller && active) {
+      const scrollerRect = scroller.getBoundingClientRect();
+      const activeRect = active.getBoundingClientRect();
+      if (activeRect.top < scrollerRect.top) {
+        scroller.scrollTop -= scrollerRect.top - activeRect.top;
+      } else if (activeRect.bottom > scrollerRect.bottom) {
+        scroller.scrollTop += activeRect.bottom - scrollerRect.bottom;
+      }
+    }
+    if (detailRef.current) detailRef.current.scrollTop = 0;
   }, [questionId]);
 
   useEffect(() => {
@@ -90,8 +104,19 @@ const PracticePage: React.FC<Props> = ({ sdk, categoryId, questionId }) => {
   };
 
   return (
-    <div style={{ display: "flex", gap: 12, alignItems: "flex-start", flexWrap: "wrap", minHeight: "100%" }}>
-      <div style={{ width: 280, flex: "1 1 240px", maxWidth: 340, display: "flex", flexDirection: "column", gap: 8 }}>
+    <div style={{ display: "flex", gap: 12, alignItems: "stretch", height: "100%", minHeight: 0 }}>
+      <div
+        style={{
+          width: 280,
+          flex: "0 0 280px",
+          maxWidth: 340,
+          display: "flex",
+          flexDirection: "column",
+          gap: 8,
+          minHeight: 0,
+          height: "100%",
+        }}
+      >
         <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
           <b>{category.title}</b>
           <Button size="small" type="link" onClick={() => sdk.router.navigate(homePath())}>
@@ -120,7 +145,18 @@ const PracticePage: React.FC<Props> = ({ sdk, categoryId, questionId }) => {
           <Switch size="small" checked={onlyOpen} onChange={setOnlyOpen} />
           只看未掌握
         </label>
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        <div
+          ref={listRef}
+          style={{
+            flex: 1,
+            minHeight: 0,
+            overflow: "auto",
+            display: "flex",
+            flexDirection: "column",
+            gap: 6,
+            overscrollBehavior: "contain",
+          }}
+        >
           {list.length === 0 ? (
             <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="没有匹配的题目" />
           ) : (
@@ -131,6 +167,7 @@ const PracticePage: React.FC<Props> = ({ sdk, categoryId, questionId }) => {
                 <button
                   key={item.id}
                   type="button"
+                  data-active={active ? "true" : undefined}
                   onClick={() => sdk.router.navigate(scopedQuestionPath(category.id, item.id))}
                   style={{
                     textAlign: "left",
@@ -159,7 +196,20 @@ const PracticePage: React.FC<Props> = ({ sdk, categoryId, questionId }) => {
         </div>
       </div>
 
-      <div style={{ flex: "3 1 420px", minWidth: 0, display: "flex", flexDirection: "column", gap: 12 }}>
+      <div
+        ref={detailRef}
+        style={{
+          flex: "1 1 420px",
+          minWidth: 0,
+          minHeight: 0,
+          height: "100%",
+          overflow: "auto",
+          display: "flex",
+          flexDirection: "column",
+          gap: 12,
+          overscrollBehavior: "contain",
+        }}
+      >
         {!question ? (
           <Empty description="从左侧选一道题" />
         ) : (
