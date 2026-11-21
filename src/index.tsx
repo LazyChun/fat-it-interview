@@ -5,7 +5,7 @@
  *   - 活动栏图标 → 主侧边栏 + 工作台整页
  *   - 主侧边栏只放分类和搜索
  *   - 工作台按 sdk.router 渲染总览或题目
- * 题库、算法演示和 React 渲染都在前端完成，不启用 Python 后端。
+ * 题库、算法演示、React 渲染和 Vue 渲染都在前端完成，不启用 Python 后端。
  */
 import React from "react";
 import type { Disposable, FatNotesPluginSDK } from "fat-notes-sdk";
@@ -14,6 +14,9 @@ import DailyQuestionBlock from "./blocks/DailyQuestionBlock";
 import ReactPlayBlock from "./blocks/reactPlay/ReactPlayBlock";
 import ReactPlayDisplay from "./blocks/reactPlay/ReactPlayDisplay";
 import { DEFAULT_REACT_PLAY, DEFAULT_REACT_SOURCE } from "./blocks/reactPlay/defaultSource";
+import VuePlayBlock from "./blocks/vuePlay/VuePlayBlock";
+import VuePlayDisplay from "./blocks/vuePlay/VuePlayDisplay";
+import { DEFAULT_VUE_PLAY, DEFAULT_VUE_SOURCE } from "./blocks/vuePlay/defaultSource";
 import { CATEGORIES, CATEGORY_TREE, getCategory } from "./data/categories";
 import { QUESTIONS, getQuestion, topicOf } from "./data/questions";
 import {
@@ -23,6 +26,7 @@ import {
   DAILY_BLOCK_ICON,
   IT_INTERVIEW_BLOCK_CATEGORY,
   REACT_PLAY_BLOCK_ICON,
+  VUE_PLAY_BLOCK_ICON,
 } from "./ids";
 import { categoryIconComponent } from "./icons";
 import MenuView from "./MenuView";
@@ -155,7 +159,7 @@ export async function activate(sdk: FatNotesPluginSDK): Promise<void> {
           React.createElement(
             "p",
             null,
-            `内置 ${QUESTIONS.length} 道题，分为 ${CATEGORIES.map((item) => item.title).join("、")}。算法题带逐步演示。仪表盘可以添加「React 渲染」卡片，左边写组件，右边看页面。`,
+            `内置 ${QUESTIONS.length} 道题，分为 ${CATEGORIES.map((item) => item.title).join("、")}。算法题带逐步演示。仪表盘可以添加「React 渲染」或「Vue 渲染」卡片，左边写组件，右边看页面。`,
           ),
           React.createElement(
             "p",
@@ -324,6 +328,105 @@ export async function activate(sdk: FatNotesPluginSDK): Promise<void> {
       id: "fat-it-interview.react.display",
       blockType: "fat-it-interview.react",
       render: () => React.createElement(ReactPlayDisplay, { sdk }),
+    }),
+  );
+
+  safeRegister("block:vue", () =>
+    sdk.contributions.registerBlockType({
+      type: "fat-it-interview.vue",
+      title: "Vue 渲染",
+      iconUrl: VUE_PLAY_BLOCK_ICON,
+      category: IT_INTERVIEW_BLOCK_CATEGORY,
+      index: 23,
+      defaultSize: { w: 18, h: 48, minW: 10, minH: 20 },
+      defaultOptions: {
+        vuePlay: DEFAULT_VUE_PLAY,
+      },
+      defaultCommonOptions: {
+        padding: { all: 0 },
+      },
+      dataConfig: false,
+      configDoc: {
+        type: "fat-it-interview.vue",
+        title: "Vue 渲染",
+        summary:
+          "三栏卡片：代码、控制台、页面。用户编写 Vue 3 单文件组件，或 export default 一个组件，运行后在沙箱页面里渲染。支持 script setup、template 和 style。不使用数据查询。",
+        category: IT_INTERVIEW_BLOCK_CATEGORY,
+        keywords: ["Vue", "Vue3", "antd", "ant-design-vue", "渲染", "代码", "预览", "面试"],
+        layout: { w: 18, h: 48, description: "网格单位。画布 24 列，行高 8px。" },
+        sections: [
+          {
+            key: "options",
+            description:
+              "代码和展示选项都在 vuePlay。预览提供 Vue 3、lodash 和 ant-design-vue。Less 编辑器默认关闭。",
+            fields: [
+              {
+                path: "vuePlay.source",
+                name: "Vue 源码",
+                dataType: "string",
+                description:
+                  "Vue 3 单文件组件：<script setup>、<template>、<style>。也可以只写 export default 的组件对象。可以从 ant-design-vue 或 antd 引入组件。console.log 显示在控制台。",
+                default: DEFAULT_VUE_SOURCE,
+              },
+              {
+                path: "vuePlay.theme",
+                name: "主题",
+                dataType: "string",
+                enum: ["dark", "light"],
+                default: "dark",
+                description: "代码编辑器和控制台的深浅色。预览页不跟随主题。",
+              },
+              {
+                path: "vuePlay.showConsole",
+                name: "显示控制台",
+                dataType: "boolean",
+                default: true,
+              },
+              {
+                path: "vuePlay.consolePlacement",
+                name: "控制台位置",
+                dataType: "string",
+                enum: ["bottom", "right"],
+                default: "bottom",
+                description: "bottom 在代码下侧，right 在页面下侧。",
+              },
+              {
+                path: "vuePlay.showLess",
+                name: "显示 Less",
+                dataType: "boolean",
+                default: false,
+                description: "为 true 时显示 Less 编辑器。默认关闭。组件里的 style 不受这个开关影响。",
+              },
+              {
+                path: "vuePlay.less",
+                name: "Less 样式",
+                dataType: "string",
+                default: "",
+                description:
+                  "额外的 Less 源码。运行时编译成 CSS，和组件 style 一起作用在预览页。不支持 @import 和 @plugin。",
+              },
+            ],
+            example: { vuePlay: DEFAULT_VUE_PLAY },
+          },
+          { key: "reqParams", description: "不查询数据源。", example: { queries: [] } },
+        ],
+        notes: [
+          "页面在不带同源权限的 iframe 里渲染，读不到宿主页面和本地存储。",
+          "预览里可以 import vue、lodash 和 ant-design-vue。从 antd 引入也会得到同一套 Vue 组件。其它包不可用。",
+          "点运行或按 Ctrl+Enter 后才会重新渲染。style 和 Less 也在这时编译进预览页。",
+          "Less 编辑器默认不显示，在卡片配置里打开「显示 Less」。",
+          "不编译 JSX。界面写在 template 里。",
+        ],
+      },
+      render: (props) => React.createElement(VuePlayBlock, { sdk, ...props }),
+    }),
+  );
+
+  safeRegister("blockDisplay:vue", () =>
+    sdk.contributions.registerBlockDisplayConfig({
+      id: "fat-it-interview.vue.display",
+      blockType: "fat-it-interview.vue",
+      render: () => React.createElement(VuePlayDisplay, { sdk }),
     }),
   );
 

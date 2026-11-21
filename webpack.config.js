@@ -25,6 +25,10 @@ module.exports = (_, argv) => {
     stdio: "inherit",
     cwd: __dirname,
   });
+  execFileSync(process.execPath, [path.resolve(__dirname, "scripts/buildAntdVueSandbox.js")], {
+    stdio: "inherit",
+    cwd: __dirname,
+  });
   execFileSync(process.execPath, [path.resolve(__dirname, "scripts/buildEditorLibs.js")], {
     stdio: "inherit",
     cwd: __dirname,
@@ -59,12 +63,17 @@ module.exports = (_, argv) => {
           __dirname,
           "src/blocks/reactPlay/generated/antdSandbox.js",
         ),
+        "fat-vue-umd": path.resolve(__dirname, "node_modules/vue/dist/vue.global.prod.js"),
+        "fat-antd-vue-sandbox": path.resolve(
+          __dirname,
+          "src/blocks/vuePlay/generated/antdVueSandbox.js",
+        ),
       },
     },
     module: {
       rules: [
         {
-          test: /[\\/]umd[\\/]react(?:-dom)?\.production\.min\.js$|[\\/]lodash\.min\.js$|[\\/]antdSandbox\.js$/,
+          test: /[\\/]umd[\\/]react(?:-dom)?\.production\.min\.js$|[\\/]lodash\.min\.js$|[\\/]antdSandbox\.js$|[\\/]antdVueSandbox\.js$|[\\/]vue\.global\.prod\.js$/,
           type: "asset/source",
         },
         {

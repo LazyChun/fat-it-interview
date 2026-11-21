@@ -25,13 +25,20 @@
 - 活动栏「IT 面试」
 - 主侧边栏：分类和搜索
 - 工作台整页：总览和做题
-- 仪表盘卡片：「今日面试题」「算法演示」「React 渲染」，都在添加组件菜单的「IT 面试」分类里，不占用查询配置
+- 仪表盘卡片：「今日面试题」「算法演示」「React 渲染」「Vue 渲染」，都在添加组件菜单的「IT 面试」分类里，不占用查询配置
 
 ## React 渲染
 
 添加组件时选「IT 面试 / React 渲染」。卡片分成代码、控制台、页面三块。写 `function App()` 或 `export default` 一个组件，点运行（或 Ctrl+Enter）后，页面块在沙箱 iframe 里渲染。`console.log` 进控制台。代码写在卡片自己的配置里，随画布保存。
 
 预览里自带 React 18，可以写 JSX、Hooks 和 TypeScript 类型，也可以 `import` lodash 和 antd。其它包不可用。沙箱不能读宿主页面。
+
+## Vue 渲染
+
+添加组件时选「IT 面试 / Vue 渲染」。布局和 React 渲染一样：代码、控制台、页面。写 Vue 3 单文件组件（`<script setup>`、`<template>`、`<style>`），或 `export default` 一个组件，点运行（或 Ctrl+Enter）后在沙箱 iframe 里渲染。
+
+预览里自带 Vue 3 和 ant-design-vue。可以写组合式 API、`<script setup>` 和 TypeScript 类型，也可以 `import` lodash。组件从 `ant-design-vue` 引入，写 `antd` 也会指向同一套组件，例如 `import { Button } from "ant-design-vue"`，模板里也可以直接用 `<a-button>`。`<style scoped>` 和 `lang="less"` 会编译进预览页。不编译 JSX，图标包和其它包不可用。沙箱不能读宿主页面。
+
 - 本插件页激活时请求隐藏右侧次侧栏和底部面板
 
 `plugin.json` 的 `id` / `mfName` 要和宿主加载的 Module Federation 名称一致。当前 id 是 `7e2c9a14-6b58-4f3d-a1e0-9c8d4b7f2a61`。

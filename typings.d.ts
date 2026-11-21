@@ -23,6 +23,16 @@ declare module "fat-antd-sandbox" {
   export default content;
 }
 
+declare module "fat-vue-umd" {
+  const content: string;
+  export default content;
+}
+
+declare module "fat-antd-vue-sandbox" {
+  const content: string;
+  export default content;
+}
+
 declare module "*.css";
 
 declare module "less/lib/less/index.js" {
