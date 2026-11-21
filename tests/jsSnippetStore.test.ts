@@ -13,6 +13,7 @@ import {
   applyRevision,
   clearSavedSource,
   emptySnippetFile,
+  executionOf,
   isJavaScriptLang,
   parseSnippetFile,
   removeRevision,
@@ -46,7 +47,12 @@ describe("javascript snippet history", () => {
   it("treats js and javascript as runnable", () => {
     expect(isJavaScriptLang("js")).toBe(true);
     expect(isJavaScriptLang("JavaScript")).toBe(true);
+    expect(isJavaScriptLang("ts")).toBe(true);
     expect(isJavaScriptLang("python")).toBe(false);
+    expect(executionOf("tsx")).toBe("react");
+    expect(executionOf("vue")).toBe("vue");
+    expect(executionOf("typescript")).toBe("js");
+    expect(executionOf("css")).toBeNull();
   });
 
   it("saves a revision, restores it, then drops it", () => {

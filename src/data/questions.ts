@@ -6,6 +6,7 @@ import { frontendAiQuestions } from "./frontend-ai";
 import { frontendExtraQuestions } from "./frontend-extra";
 import { frontendHotQuestions } from "./frontend-hot";
 import { frontendMoreQuestions } from "./frontend-more";
+import { frontendPlayQuestions } from "./frontend-play";
 import { frontendQuestions } from "./frontend";
 import { frontendStateQuestions } from "./frontend-state";
 import { frontendUnitreeQuestions } from "./frontend-unitree";
@@ -19,6 +20,7 @@ import type { Question } from "./types";
 
 export const QUESTIONS: Question[] = [
   ...frontendQuestions,
+  ...frontendPlayQuestions,
   ...frontendExtraQuestions,
   ...frontendHotQuestions,
   ...frontendMoreQuestions,

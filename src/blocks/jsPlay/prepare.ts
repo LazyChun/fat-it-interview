@@ -103,20 +103,72 @@ function stripExports(code: string): string {
   return `var __fatDefault;\n${next}`;
 }
 
+function compile(source: string): string {
+  return transform(source, {
+    transforms: ["typescript"],
+    disableESTransforms: true,
+    production: true,
+    filePath: "main.ts",
+  }).code;
+}
+
+/** 顶层 await 才需要包进 async。函数内部的 await 保持原样，输出顺序才和裸脚本一致。 */
+function hasTopLevelAwait(source: string): boolean {
+  let depth = 0;
+  let i = 0;
+  while (i < source.length) {
+    const ch = source[i];
+    if (ch === "'" || ch === '"' || ch === "`") {
+      i += 1;
+      while (i < source.length) {
+        if (source[i] === "\\") {
+          i += 2;
+          continue;
+        }
+        if (source[i] === ch) {
+          i += 1;
+          break;
+        }
+        i += 1;
+      }
+      continue;
+    }
+    if (ch === "/" && source[i + 1] === "/") {
+      const next = source.indexOf("\n", i);
+      i = next < 0 ? source.length : next + 1;
+      continue;
+    }
+    if (ch === "/" && source[i + 1] === "*") {
+      const next = source.indexOf("*/", i + 2);
+      i = next < 0 ? source.length : next + 2;
+      continue;
+    }
+    if (ch === "{") depth += 1;
+    else if (ch === "}") depth = Math.max(0, depth - 1);
+    else if (
+      depth === 0 &&
+      source.startsWith("await", i) &&
+      !/[A-Za-z0-9_$]/.test(source[i - 1] ?? "") &&
+      !/[A-Za-z0-9_$]/.test(source[i + 5] ?? "")
+    ) {
+      return true;
+    }
+    i += 1;
+  }
+  return false;
+}
+
 export function prepareJsSource(source: string): string {
   if (!source.trim()) {
     throw new Error(EMPTY_SOURCE);
   }
   const rewritten = stripExports(rewriteModuleImports(source));
-  const wrapped = `"use strict";\nasync function __fatJsPlayRun() {\n${rewritten}\n}\nreturn __fatJsPlayRun();\n`;
+  const wrapped = hasTopLevelAwait(rewritten)
+    ? `"use strict";\nasync function __fatJsPlayRun() {\n${rewritten}\n}\nreturn __fatJsPlayRun();\n`
+    : `"use strict";\n${rewritten}\n`;
   let compiled = "";
   try {
-    compiled = transform(wrapped, {
-      transforms: ["typescript"],
-      disableESTransforms: true,
-      production: true,
-      filePath: "main.ts",
-    }).code;
+    compiled = compile(wrapped);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(message);

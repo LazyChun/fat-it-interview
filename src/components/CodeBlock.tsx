@@ -6,7 +6,7 @@ import { Button, Segmented, theme as antdTheme } from "antd";
 import type { CSSProperties } from "react";
 import type { FatNotesPluginSDK } from "fat-notes-sdk";
 import JsSnippetCard from "../blocks/jsPlay/JsSnippetCard";
-import { isJavaScriptLang } from "../blocks/jsPlay/snippetStore";
+import { executionOf, type SnippetRuntime } from "../blocks/jsPlay/snippetStore";
 import { setCodeLang } from "../codeLang";
 import { subscribeEditorThemeReset } from "../executionTheme";
 import {
@@ -57,6 +57,7 @@ const LANG_LABELS: Record<string, string> = {
   rust: "Rust",
   c: "C",
   cpp: "C++",
+  vue: "Vue",
   yaml: "YAML",
   yml: "YAML",
 };
@@ -96,6 +97,7 @@ const MONACO_LANGS: Record<string, string> = {
   rust: "rust",
   c: "c",
   cpp: "cpp",
+  vue: "html",
 };
 
 const EDITOR_OPTIONS: editor.IStandaloneEditorConstructionOptions = {
@@ -314,10 +316,18 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ lang, code, samples, title, play 
       ? CODE_LANG_META[activeLang].monaco
       : MONACO_LANGS[(lang ?? "").toLowerCase()] ?? (lang ?? "plaintext");
 
-  const cardSource = isMulti ? (samples?.js ?? "") : (code ?? "");
-  const canOpenCard =
-    Boolean(play) && cardSource.length > 0 && isJavaScriptLang(isMulti ? activeLang : lang);
-  const canKeepCard = Boolean(play) && cardSource.length > 0 && (isMulti || isJavaScriptLang(lang));
+  const runtime: SnippetRuntime | null = isMulti
+    ? activeLang === "js" || activeLang === "ts"
+      ? "js"
+      : null
+    : executionOf(lang);
+  const cardSource = isMulti
+    ? activeLang === "ts"
+      ? (samples?.ts ?? "")
+      : (samples?.js ?? "")
+    : (code ?? "");
+  const canOpenCard = Boolean(play) && runtime !== null && cardSource.length > 0;
+  const canKeepCard = canOpenCard;
   const [asCard, setAsCard] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -397,6 +407,8 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ lang, code, samples, title, play 
         sdk={play.sdk}
         snippetId={play.snippetId}
         defaultSource={cardSource}
+        runtime={runtime ?? "js"}
+        editorLanguage={monacoLang}
         onShowCode={() => setAsCard(false)}
       />
     );

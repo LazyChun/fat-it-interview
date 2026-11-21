@@ -8,11 +8,20 @@ import * as monaco from "monaco-editor";
 import { Button, ConfigProvider, Popconfirm, Splitter, theme as antdTheme } from "antd";
 import type { FatNotesPluginSDK } from "fat-notes-sdk";
 import lodashUmd from "fat-lodash-umd";
+import reactUmd from "fat-react-umd";
+import reactDomUmd from "fat-react-dom-umd";
+import antdUmd from "fat-antd-sandbox";
+import vueUmd from "fat-vue-umd";
+import antdVueUmd from "fat-antd-vue-sandbox";
 import { useExecutionConsolePlacement, useExecutionTheme } from "../../hooks";
 import { resetEditorThemeOwners } from "../../executionTheme";
 import { configureJsPlayMonaco } from "./editorTypes";
 import { prepareJsSource } from "./prepare";
 import { runJavaScript, type JsLogLine } from "./runSandbox";
+import { prepareReactSource } from "../reactPlay/prepare";
+import { REACT_PLAY_MESSAGE, buildReactSandboxHtml } from "../reactPlay/sandboxHtml";
+import { prepareVueSource } from "../vuePlay/prepare";
+import { VUE_PLAY_MESSAGE, buildVueSandboxHtml } from "../vuePlay/sandboxHtml";
 import {
   activeSource,
   appendSave,
@@ -21,6 +30,7 @@ import {
   createRevisionId,
   removeRevision,
   type JsSnippetRevision,
+  type SnippetRuntime,
 } from "./snippetStore";
 import { commitSnippet, loadSnippet, snippetConfigOf } from "./snippetStorage";
 import "./JsPlayBlock.css";
@@ -90,13 +100,21 @@ interface JsSnippetCardProps {
   snippetId: string;
   defaultSource: string;
   onShowCode: () => void;
+  /** js 走控制台，react / vue 多一块页面预览 */
+  runtime?: SnippetRuntime;
+  editorLanguage?: string;
 }
+
+const REACT_SANDBOX = buildReactSandboxHtml(reactUmd, reactDomUmd, lodashUmd, antdUmd);
+const VUE_SANDBOX = buildVueSandboxHtml(vueUmd, lodashUmd, antdVueUmd);
 
 const JsSnippetCard: React.FC<JsSnippetCardProps> = ({
   sdk,
   snippetId,
   defaultSource,
   onShowCode,
+  runtime = "js",
+  editorLanguage = "javascript",
 }) => {
   const { token } = antdTheme.useToken();
   const executionTheme = useExecutionTheme();
@@ -111,9 +129,14 @@ const JsSnippetCard: React.FC<JsSnippetCardProps> = ({
   const [running, setRunning] = useState(false);
   const [busy, setBusy] = useState(false);
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
+  const frameReady = useRef(false);
+  const pendingRender = useRef<{ id: number; code: string; css: string } | null>(null);
   const draftRef = useRef(draft);
   const runToken = useRef(0);
   const cancelRef = useRef<(() => void) | null>(null);
+  const preview = runtime !== "js";
+  const previewMessage = runtime === "vue" ? VUE_PLAY_MESSAGE : REACT_PLAY_MESSAGE;
   draftRef.current = draft;
   const dirty = draft !== persisted;
 
@@ -123,26 +146,30 @@ const JsSnippetCard: React.FC<JsSnippetCardProps> = ({
     writeEditor(editorRef.current, source);
   };
 
-  const run = () => {
-    const source = draftRef.current;
-    if (!source.trim()) {
-      cancelRef.current?.();
-      cancelRef.current = null;
-      runToken.current += 1;
-      setRunning(false);
-      setLines([{ level: "error", text: "代码是空的" }]);
+  const failRun = (message: string) => {
+    cancelRef.current?.();
+    cancelRef.current = null;
+    runToken.current += 1;
+    setRunning(false);
+    setLines([{ level: "error", text: message }]);
+  };
+
+  const postPreview = (id: number, code: string, css: string) => {
+    const frame = iframeRef.current?.contentWindow;
+    if (!frameReady.current || !frame) {
+      pendingRender.current = { id, code, css };
       return;
     }
+    frame.postMessage({ type: previewMessage, kind: "render", id, code, css }, "*");
+  };
+
+  const runJs = (source: string) => {
     let code = "";
     try {
       code = prepareJsSource(source);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      cancelRef.current?.();
-      cancelRef.current = null;
-      runToken.current += 1;
-      setRunning(false);
-      setLines([{ level: "error", text: message }]);
+      failRun(message);
       return;
     }
     cancelRef.current?.();
@@ -170,6 +197,39 @@ const JsSnippetCard: React.FC<JsSnippetCardProps> = ({
       done.push({ level: "system", text: "运行完成" });
       setLines((prev) => prev.concat(done));
     });
+  };
+
+  const runPreview = async (source: string) => {
+    cancelRef.current?.();
+    cancelRef.current = null;
+    const tokenId = runToken.current + 1;
+    runToken.current = tokenId;
+    setRunning(true);
+    setLines([{ level: "system", text: runtime === "vue" ? "正在渲染 Vue" : "正在渲染 React" }]);
+    try {
+      const prepared =
+        runtime === "vue" ? await prepareVueSource(source) : { code: prepareReactSource(source), css: "" };
+      if (runToken.current !== tokenId) return;
+      postPreview(tokenId, prepared.code, prepared.css);
+    } catch (error) {
+      if (runToken.current !== tokenId) return;
+      const message = error instanceof Error ? error.message : String(error);
+      setRunning(false);
+      setLines([{ level: "error", text: message }]);
+    }
+  };
+
+  const run = () => {
+    const source = draftRef.current;
+    if (!source.trim()) {
+      failRun("代码是空的");
+      return;
+    }
+    if (runtime === "js") {
+      runJs(source);
+      return;
+    }
+    void runPreview(source);
   };
   const runRef = useRef(run);
   runRef.current = run;
@@ -317,6 +377,53 @@ const JsSnippetCard: React.FC<JsSnippetCardProps> = ({
     return () => resetEditorThemeOwners();
   }, []);
 
+  useEffect(() => {
+    if (!preview) return;
+    frameReady.current = false;
+    const onMessage = (event: MessageEvent) => {
+      if (event.source !== iframeRef.current?.contentWindow) return;
+      const data = event.data as {
+        type?: string;
+        kind?: string;
+        id?: number;
+        level?: JsLogLine["level"];
+        text?: string;
+        ok?: boolean;
+        error?: string;
+      };
+      if (!data || data.type !== previewMessage) return;
+      if (data.id && data.id !== runToken.current) return;
+      if (data.kind === "log") {
+        setLines((prev) => prev.concat({ level: data.level || "log", text: String(data.text || "") }));
+        return;
+      }
+      if (data.kind === "done") {
+        setRunning(false);
+        if (data.ok) {
+          setLines((prev) => prev.concat({ level: "system", text: "已渲染" }));
+          return;
+        }
+        setLines((prev) => prev.concat({ level: "error", text: String(data.error || "渲染失败") }));
+      }
+    };
+    window.addEventListener("message", onMessage);
+    return () => {
+      frameReady.current = false;
+      window.removeEventListener("message", onMessage);
+    };
+  }, [preview, previewMessage, snippetId]);
+
+  const handleFrameLoad = () => {
+    frameReady.current = true;
+    const pending = pendingRender.current;
+    if (!pending || pending.id !== runToken.current) return;
+    pendingRender.current = null;
+    iframeRef.current?.contentWindow?.postMessage(
+      { type: previewMessage, kind: "render", id: pending.id, code: pending.code, css: pending.css },
+      "*",
+    );
+  };
+
   const editorClass = dark ? "fat-js-play-editor" : "fat-js-play-editor fat-js-play-editor-light";
   const consoleClass = dark ? "fat-js-play-console" : "fat-js-play-console fat-js-play-console-light";
   const codePane = (
@@ -326,7 +433,7 @@ const JsSnippetCard: React.FC<JsSnippetCardProps> = ({
         <Editor
           key={snippetId}
           height="100%"
-          language="javascript"
+          language={editorLanguage}
           theme={dark ? "vs-dark" : "vs"}
           defaultValue={draft}
           onChange={handleChange}
@@ -363,7 +470,7 @@ const JsSnippetCard: React.FC<JsSnippetCardProps> = ({
       }}
     >
       <div
-        className="fat-js-snippet"
+        className={preview ? "fat-js-snippet fat-js-snippet-preview" : "fat-js-snippet"}
         style={{
           background: dark ? "#1e1e1e" : token.colorBgLayout,
           color: dark ? "rgba(255,255,255,0.88)" : undefined,
@@ -408,7 +515,11 @@ const JsSnippetCard: React.FC<JsSnippetCardProps> = ({
           </Button>
         )}
         <span className="fat-js-snippet-hint">
-          Ctrl+Enter 运行。保存写入本机，可在历史里恢复或删除。
+          {runtime === "vue"
+            ? "Ctrl+Enter 渲染。可写 script setup 和 template。保存写入本机。"
+            : runtime === "react"
+              ? "Ctrl+Enter 渲染。写 function App 或 export default。保存写入本机。"
+              : "Ctrl+Enter 运行。保存写入本机，可在历史里恢复或删除。"}
         </span>
       </div>
       {historyOpen ? (
@@ -456,18 +567,46 @@ const JsSnippetCard: React.FC<JsSnippetCardProps> = ({
         <div className="fat-js-snippet-loading">正在读取已保存的代码</div>
       ) : (
         <div className="fat-js-play-body">
-          <Splitter
-            key={consolePlacement}
-            orientation={consolePlacement === "right" ? "horizontal" : "vertical"}
-            style={{ height: "100%" }}
-          >
-            <Splitter.Panel defaultSize="68%" min="20%">
-              {codePane}
-            </Splitter.Panel>
-            <Splitter.Panel defaultSize="32%" min="16%">
-              {consolePane}
-            </Splitter.Panel>
-          </Splitter>
+          {preview ? (
+            <Splitter orientation="vertical" style={{ height: "100%" }}>
+              <Splitter.Panel defaultSize="46%" min="18%">
+                {codePane}
+              </Splitter.Panel>
+              <Splitter.Panel defaultSize="54%" min="22%">
+                <Splitter orientation="horizontal" style={{ height: "100%" }}>
+                  <Splitter.Panel defaultSize="58%" min="20%">
+                    <div className="fat-js-play-pane">
+                      <div className="fat-js-play-label">页面</div>
+                      <iframe
+                        className="fat-js-snippet-frame"
+                        title={runtime === "vue" ? "Vue 预览" : "React 预览"}
+                        sandbox="allow-scripts"
+                        srcDoc={runtime === "vue" ? VUE_SANDBOX : REACT_SANDBOX}
+                        ref={iframeRef}
+                        onLoad={handleFrameLoad}
+                      />
+                    </div>
+                  </Splitter.Panel>
+                  <Splitter.Panel defaultSize="42%" min="16%">
+                    {consolePane}
+                  </Splitter.Panel>
+                </Splitter>
+              </Splitter.Panel>
+            </Splitter>
+          ) : (
+            <Splitter
+              key={consolePlacement}
+              orientation={consolePlacement === "right" ? "horizontal" : "vertical"}
+              style={{ height: "100%" }}
+            >
+              <Splitter.Panel defaultSize="68%" min="20%">
+                {codePane}
+              </Splitter.Panel>
+              <Splitter.Panel defaultSize="32%" min="16%">
+                {consolePane}
+              </Splitter.Panel>
+            </Splitter>
+          )}
         </div>
       )}
       </div>

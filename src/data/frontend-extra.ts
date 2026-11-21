@@ -410,7 +410,7 @@ export const frontendExtraQuestions: Question[] = [
       {
         type: "code",
         lang: "tsx",
-        code: "const [state, formAction, isPending] = useActionState(\n  async (prev, formData) => {\n    const name = formData.get(\"name\");\n    const err = await updateName(name);\n    return err ? { error: err } : { error: null };\n  },\n  { error: null }\n);\n\n<form action={formAction}>\n  <input name=\"name\" />\n  <button disabled={isPending}>保存</button>\n  {state.error && <p>{state.error}</p>}\n</form>",
+        code: "function App() {\n  const [name, setName] = React.useState(\"Ada\");\n  const [pending, setPending] = React.useState(false);\n  const [error, setError] = React.useState(\"\");\n\n  async function onSubmit(event) {\n    event.preventDefault();\n    const next = String(new FormData(event.currentTarget).get(\"name\") || \"\");\n    setPending(true);\n    await new Promise((resolve) => setTimeout(resolve, 400));\n    setPending(false);\n    if (next.trim().length < 2) {\n      setError(\"至少两个字符\");\n      return;\n    }\n    setError(\"\");\n    setName(next);\n    console.log(\"saved\", next);\n  }\n\n  return (\n    <form onSubmit={onSubmit}>\n      <p>预览用 React 18。React 19 的 useActionState 会把 pending 和错误收进同一个 Hook。</p>\n      <p>当前：{name}</p>\n      <input name=\"name\" defaultValue={name} />\n      <button disabled={pending}>{pending ? \"保存中\" : \"保存\"}</button>\n      {error ? <p>{error}</p> : null}\n    </form>\n  );\n}",
       },
     ],
     followUps: ["Actions 和普通 async 事件处理函数的区别是什么？为什么要放进 transition？"],
@@ -436,7 +436,7 @@ export const frontendExtraQuestions: Question[] = [
       {
         type: "code",
         lang: "tsx",
-        code: "const [query, setQuery] = useState(\"\");\nconst deferredQuery = useDeferredValue(query);\nconst filtered = useMemo(\n  () => bigList.filter((item) => item.includes(deferredQuery)),\n  [bigList, deferredQuery]\n);",
+        code: "function App() {\n  const [query, setQuery] = React.useState(\"\");\n  const deferredQuery = React.useDeferredValue(query);\n  const bigList = React.useMemo(\n    () => Array.from({ length: 200 }, (_, index) => \"item-\" + index),\n    [],\n  );\n  const filtered = React.useMemo(\n    () => bigList.filter((item) => item.includes(deferredQuery)),\n    [bigList, deferredQuery],\n  );\n\n  return (\n    <div>\n      <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder=\"输入 item-1\" />\n      <p>延迟关键字：{deferredQuery || \"（空）\"}</p>\n      <p>匹配 {filtered.length} 条，例如 {filtered.slice(0, 3).join(\", \")}</p>\n    </div>\n  );\n}",
       },
     ],
     followUps: ["startTransition 里能放有副作用的代码吗？为什么？"],
@@ -479,6 +479,11 @@ export const frontendExtraQuestions: Question[] = [
           "依赖数组决定重跑时机：[] 只在挂载后跑一次；依赖变化时先 cleanup 再 setup。",
           "在 effect 里 setState 会触发额外渲染，依赖没写对就死循环；能派生的数据别放 state，能在事件里算的别放 effect。",
         ],
+      },
+      {
+        type: "code",
+        lang: "tsx",
+        code: "function App() {\n  const box = React.useRef(null);\n  const [width, setWidth] = React.useState(0);\n  const [log, setLog] = React.useState(\"\");\n  const [wide, setWide] = React.useState(false);\n\n  React.useLayoutEffect(() => {\n    const next = box.current ? box.current.offsetWidth : 0;\n    setWidth((prev) => (prev === next ? prev : next));\n  });\n\n  React.useEffect(() => {\n    setLog(\"useEffect 在绘制之后，当前记录宽度 \" + width);\n  }, [width]);\n\n  return (\n    <div>\n      <button onClick={() => setWide((value) => !value)}>改宽度</button>\n      <div ref={box} style={{ width: wide ? \"80%\" : \"40%\", padding: 8, background: \"#e6f4ff\" }}>\n        绘制前量到 {width}px\n      </div>\n      <p>{log}</p>\n    </div>\n  );\n}",
       },
     ],
     followUps: ["为什么说「数据获取只用 useEffect」是反模式？有什么更好的替代？"],
@@ -1170,7 +1175,7 @@ export const frontendExtraQuestions: Question[] = [
       {
         type: "code",
         lang: "ts",
-        code: "function flat<T>(arr: unknown[], depth = 1): unknown[] {\n  if (depth <= 0) return arr;\n  return arr.reduce<unknown[]>(\n    (acc, cur) => acc.concat(Array.isArray(cur) ? flat(cur, depth - 1) : [cur]),\n    []\n  );\n}\n\nfunction shuffle<T>(arr: T[]): T[] {\n  const a = [...arr];\n  for (let i = a.length - 1; i > 0; i--) {\n    const j = Math.floor(Math.random() * (i + 1));\n    [a[i], a[j]] = [a[j], a[i]];\n  }\n  return a;\n}",
+        code: "function flat<T>(arr: unknown[], depth = 1): unknown[] {\n  if (depth <= 0) return arr;\n  return arr.reduce<unknown[]>(\n    (acc, cur) => acc.concat(Array.isArray(cur) ? flat(cur, depth - 1) : [cur]),\n    []\n  );\n}\n\nfunction shuffle<T>(arr: T[]): T[] {\n  const a = [...arr];\n  for (let i = a.length - 1; i > 0; i--) {\n    const j = Math.floor(Math.random() * (i + 1));\n    [a[i], a[j]] = [a[j], a[i]];\n  }\n  return a;\n}\n\nconsole.log(flat([1, [2, [3, [4]]]], 2));"
       },
     ],
     followUps: ["arr.sort(() => Math.random() - 0.5) 为什么分布不均？"],

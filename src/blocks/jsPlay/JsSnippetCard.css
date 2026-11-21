@@ -1,3 +1,15 @@
+.fat-js-snippet-preview {
+  height: 640px;
+}
+
+.fat-js-snippet-frame {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  border: 0;
+  background: #fff;
+}
+
 .fat-js-snippet {
   height: 460px;
   min-height: 0;

@@ -5,7 +5,19 @@
 
 export const JS_SNIPPET_HISTORY_LIMIT = 30;
 
-const JAVASCRIPT_LANGS = new Set(["js", "javascript", "jsx", "mjs", "cjs"]);
+const JAVASCRIPT_LANGS = new Set([
+  "js",
+  "javascript",
+  "ts",
+  "typescript",
+  "mjs",
+  "cjs",
+]);
+
+const REACT_LANGS = new Set(["jsx", "tsx"]);
+const VUE_LANGS = new Set(["vue"]);
+
+export type SnippetRuntime = "js" | "react" | "vue";
 
 export interface JsSnippetRevision {
   id: string;
@@ -25,6 +37,15 @@ export interface JsSnippetFile {
 
 export function isJavaScriptLang(lang: string | null | undefined): boolean {
   return JAVASCRIPT_LANGS.has((lang ?? "").toLowerCase());
+}
+
+/** 答案代码块能打开哪种执行卡片。CSS、Java 等只展示。 */
+export function executionOf(lang: string | null | undefined): SnippetRuntime | null {
+  const id = (lang ?? "").toLowerCase();
+  if (REACT_LANGS.has(id)) return "react";
+  if (VUE_LANGS.has(id)) return "vue";
+  if (JAVASCRIPT_LANGS.has(id)) return "js";
+  return null;
 }
 
 export function emptySnippetFile(): JsSnippetFile {

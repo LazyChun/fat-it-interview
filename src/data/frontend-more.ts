@@ -603,6 +603,11 @@ export const frontendMoreQuestions: Question[] = [
           "监听一个对象的深层变化用 { deep: true }，代价是遍历。能监听具体字段就不要整棵深监听。reactive 对象被整体替换时，直接 watch 这个对象即可，不必 deep。",
         ],
       },
+      {
+        type: "code",
+        lang: "vue",
+        code: "<script setup>\nimport { ref, watch, watchEffect } from \"vue\";\n\nconst userId = ref(1);\nconst note = ref(\"watch 默认不立即执行\");\n\nwatch(userId, (id) => {\n  note.value = \"watch：按 id 请求 \" + id;\n  console.log(note.value);\n});\n\nwatchEffect(() => {\n  console.log(\"watchEffect 读到\", userId.value);\n});\n</script>\n\n<template>\n  <div>\n    <button @click=\"userId += 1\">下一个用户</button>\n    <p>{{ note }}</p>\n  </div>\n</template>\n",
+      },
     ],
     followUps: ["watch 的来源是 getter 和是一个 ref，写法上差在哪？"],
   },

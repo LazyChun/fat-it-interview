@@ -110,6 +110,11 @@ export const frontendQuestions: Question[] = [
           "排查：事件解绑、clearTimeout、不再把回调挂到全局。",
         ],
       },
+      {
+        type: "code",
+        lang: "js",
+        code: "const withVar = [];\nfor (var i = 0; i < 3; i++) {\n  withVar.push(() => i);\n}\nconst withLet = [];\nfor (let j = 0; j < 3; j++) {\n  withLet.push(() => j);\n}\nconsole.log(\"var\", withVar.map((fn) => fn()));\nconsole.log(\"let\", withLet.map((fn) => fn()));",
+      },
     ],
     followUps: ["闭包和 React Hooks 的陈旧状态有什么关系？"],
   },
@@ -130,6 +135,11 @@ export const frontendQuestions: Question[] = [
           "new 绑定：this 是新创建的对象，优先级最高（bind 过的函数仍可 new，此时 new 胜出）。",
           "箭头函数没有自己的 this，沿词法作用域找外层，call/apply/bind 都无法替换。",
         ],
+      },
+      {
+        type: "code",
+        lang: "js",
+        code: "\"use strict\";\nfunction show() {\n  return this ? this.tag : \"undefined\";\n}\nconst obj = { tag: \"obj\", show };\nconst bound = show.bind({ tag: \"bound\" });\nfunction Box(tag) {\n  this.tag = tag;\n}\nconst lost = obj.show;\nconst arrow = () => \"lexical\";\nconsole.log(\"explicit\", show.call({ tag: \"call\" }));\nconsole.log(\"implicit\", obj.show());\nconsole.log(\"bound\", bound());\nconsole.log(\"lost\", lost());\nconsole.log(\"new\", new Box(\"fresh\").tag);\nconsole.log(\"arrow\", arrow.call({ tag: \"nope\" }));",
       },
     ],
     followUps: ["「优先级：new > 显式 > 隐式 > 默认」怎么用例子证明？"],
@@ -159,7 +169,7 @@ export const frontendQuestions: Question[] = [
       {
         type: "code",
         lang: "js",
-        code: "function myInstanceof(obj, Ctor) {\n  if (obj == null || typeof Ctor !== \"function\") return false;\n  let proto = Object.getPrototypeOf(obj);\n  while (proto) {\n    if (proto === Ctor.prototype) return true;\n    proto = Object.getPrototypeOf(proto);\n  }\n  return false;\n}",
+        code: "function myInstanceof(obj, Ctor) {\n  if (obj == null || typeof Ctor !== \"function\") return false;\n  let proto = Object.getPrototypeOf(obj);\n  while (proto) {\n    if (proto === Ctor.prototype) return true;\n    proto = Object.getPrototypeOf(proto);\n  }\n  return false;\n}\n\nconsole.log(\"array\", myInstanceof([], Array));\nconsole.log(\"number literal\", myInstanceof(1, Number));\nconsole.log(\"number object\", myInstanceof(new Number(1), Number));",
       },
     ],
     followUps: ["class 继承和原型链是什么关系？"],
@@ -210,6 +220,11 @@ export const frontendQuestions: Question[] = [
           "effect 的依赖要写全。eslint 的 exhaustive-deps 是在防止这种 bug，不要随手关掉。",
           "useRef 保存的是同一份可变盒子，适合定时器 id、不触发渲染的最新值。",
         ],
+      },
+      {
+        type: "code",
+        lang: "tsx",
+        code: "function App() {\n  const [count, setCount] = React.useState(0);\n  const latest = React.useRef(count);\n  latest.current = count;\n\n  React.useEffect(() => {\n    const timer = setInterval(() => {\n      console.log(\"effect 闭包\", count, \"ref\", latest.current);\n    }, 1000);\n    return () => clearInterval(timer);\n  }, []);\n\n  return (\n    <div>\n      <p>count = {count}。点几次后看控制台：闭包仍是 0，ref 是最新值。</p>\n      <button onClick={() => setCount((value) => value + 1)}>+1</button>\n    </div>\n  );\n}",
       },
     ],
     followUps: ["useMemo 和 useCallback 什么时候才值得用？"],
@@ -298,7 +313,7 @@ export const frontendQuestions: Question[] = [
       {
         type: "code",
         lang: "js",
-        code: "async function load() {\n  try {\n    const user = await api.user();\n    return user;\n  } catch (err) {\n    // 在这里处理，或继续 throw 让调用方决定\n    throw err;\n  }\n}",
+        code: "function delay(ms, value, shouldFail = false) {\n  return new Promise((resolve, reject) => {\n    setTimeout(() => (shouldFail ? reject(new Error(value)) : resolve(value)), ms);\n  });\n}\n\nconst recovered = await delay(10, \"boom\", true).catch((err) => \"caught:\" + err.message);\nconsole.log(recovered);\n\nconst settled = await Promise.allSettled([\n  delay(10, \"ok\"),\n  delay(20, \"nope\", true),\n]);\nconsole.log(settled.map((item) => item.status));",
       },
     ],
     followUps: ["微任务里抛出的错误，window.onerror 抓得到吗？"],
@@ -363,6 +378,11 @@ export const frontendQuestions: Question[] = [
           "不要在响应式对象里塞大块不需要追踪的数据，依赖收集是有成本的。",
         ],
       },
+      {
+        type: "code",
+        lang: "vue",
+        code: "<script setup>\nimport { computed, reactive, ref, toRefs } from \"vue\";\n\nconst count = ref(0);\nconst state = reactive({ first: \"Ada\", last: \"Lovelace\" });\nconst { first } = toRefs(state);\nconst name = computed(() => first.value + \" \" + state.last);\n\nfunction add() {\n  count.value += 1;\n  console.log(\"count\", count.value, name.value);\n}\n</script>\n\n<template>\n  <div>\n    <p>{{ name }} · {{ count }}</p>\n    <button @click=\"add\">+1</button>\n    <button @click=\"state.last = state.last === 'Lovelace' ? 'Byron' : 'Lovelace'\">改姓</button>\n  </div>\n</template>\n",
+      },
     ],
     followUps: ["computed 和 watch 怎么选？"],
   },
@@ -383,6 +403,11 @@ export const frontendQuestions: Question[] = [
           "插槽是父组件把模板交给子组件的出口。作用域插槽让子组件把数据交回给父组件的插槽模板。",
           "生命周期里，子组件先挂载，父组件后挂载。销毁时父组件的钩子先走。",
         ],
+      },
+      {
+        type: "code",
+        lang: "vue",
+        code: "<script setup>\nimport { ref } from \"vue\";\n\nconst title = ref(\"笔记\");\n</script>\n\n<template>\n  <div>\n    <label>\n      v-model\n      <input v-model=\"title\" />\n    </label>\n    <p>父组件读到：{{ title }}</p>\n  </div>\n</template>\n",
       },
     ],
     followUps: ["Composition API 和 Options API 的逻辑复用差在哪？"],
@@ -608,7 +633,7 @@ export const frontendQuestions: Question[] = [
       {
         type: "code",
         lang: "tsx",
-        code: "// 一次点击只 +1\nsetCount(count + 1);\nsetCount(count + 1);\n// 一次点击 +2\nsetCount(c => c + 1);\nsetCount(c => c + 1);",
+        code: "function App() {\n  const [count, setCount] = React.useState(0);\n  const [note, setNote] = React.useState(\"还没点\");\n\n  return (\n    <div>\n      <p>count = {count}</p>\n      <p>{note}</p>\n      <button\n        onClick={() => {\n          setCount(count + 1);\n          setCount(count + 1);\n          setNote(\"两次 setCount(count + 1)，基于同一次渲染，只加 1\");\n        }}\n      >\n        覆盖式\n      </button>\n      <button\n        onClick={() => {\n          setCount((value) => value + 1);\n          setCount((value) => value + 1);\n          setNote(\"两次函数式更新排队执行，加 2\");\n        }}\n      >\n        函数式\n      </button>\n    </div>\n  );\n}",
       },
     ],
     followUps: ["更新函数必须是纯函数吗？在里面发请求会有什么问题？"],
@@ -701,7 +726,7 @@ export const frontendQuestions: Question[] = [
       {
         type: "code",
         lang: "tsx",
-        code: "class ErrorBoundary extends React.Component {\n  state = { hasError: false };\n  static getDerivedStateFromError() {\n    return { hasError: true };\n  }\n  componentDidCatch(error: Error, info: React.ErrorInfo) {\n    reportToSentry(error, info);\n  }\n  render() {\n    return this.state.hasError ? <Fallback /> : this.props.children;\n  }\n}",
+        code: "function Boom() {\n  const [crash, setCrash] = React.useState(false);\n  if (crash) throw new Error(\"子组件渲染失败\");\n  return <button onClick={() => setCrash(true)}>让子组件抛错</button>;\n}\n\nclass ErrorBoundary extends React.Component {\n  state = { hasError: false, message: \"\" };\n  static getDerivedStateFromError(error) {\n    return { hasError: true, message: error.message };\n  }\n  componentDidCatch(error) {\n    console.error(\"componentDidCatch\", error.message);\n  }\n  render() {\n    if (this.state.hasError) return <p>已接住：{this.state.message}</p>;\n    return this.props.children;\n  }\n}\n\nfunction App() {\n  return (\n    <ErrorBoundary>\n      <Boom />\n    </ErrorBoundary>\n  );\n}",
       },
     ],
     followUps: ["window.onerror 和 unhandledrejection 分别捕获哪类错误？"],
@@ -768,6 +793,11 @@ export const frontendQuestions: Question[] = [
           "组件级懒加载还可以用 <KeepAlive> 包住 v-if 的分支，缓存已创建的实例。",
         ],
       },
+      {
+        type: "code",
+        lang: "vue",
+        code: "<script setup>\nimport { onMounted, ref } from \"vue\";\n\nconst showIf = ref(true);\nconst shown = ref(true);\nconst IfBlock = {\n  setup() {\n    onMounted(() => console.log(\"v-if 分支挂载\"));\n    return () => \"v-if 分支（关掉再开会再打印一次挂载）\";\n  },\n};\n</script>\n\n<template>\n  <div>\n    <button @click=\"showIf = !showIf\">切换 v-if</button>\n    <button @click=\"shown = !shown\">切换 v-show</button>\n    <p><component :is=\"IfBlock\" v-if=\"showIf\" /></p>\n    <p v-show=\"shown\">v-show 段落，切换时不会重新挂载</p>\n  </div>\n</template>\n",
+      },
     ],
     followUps: ["v-if 切换时组件的生命周期会怎么走？"],
   },
@@ -789,6 +819,11 @@ export const frontendQuestions: Question[] = [
           "watchEffect 自动收集依赖、立刻执行；不用写监听目标，但依赖不显式，读起来费劲。",
           "常见坑：watch 监听 reactive 对象的属性要写成 getter 函数 () => obj.key；解构 props 后监听会失去响应。",
         ],
+      },
+      {
+        type: "code",
+        lang: "vue",
+        code: "<script setup>\nimport { computed, ref, watch } from \"vue\";\n\nconst price = ref(10);\nconst qty = ref(1);\nconst total = computed(() => price.value * qty.value);\nconst log = ref(\"改数量才会走 watch\");\n\nwatch(qty, (value, oldValue) => {\n  log.value = \"数量 \" + oldValue + \" -> \" + value + \"，合计 \" + total.value;\n  console.log(log.value);\n});\n</script>\n\n<template>\n  <div>\n    <p>单价 {{ price }} × 数量 {{ qty }} = {{ total }}</p>\n    <button @click=\"qty += 1\">加数量</button>\n    <p>{{ log }}</p>\n  </div>\n</template>\n",
       },
     ],
     followUps: ["computed 里发请求为什么是反模式？"],
@@ -813,8 +848,8 @@ export const frontendQuestions: Question[] = [
       },
       {
         type: "code",
-        lang: "ts",
-        code: "list.value.push(...newItems);\nawait nextTick();\nel.scrollTop = el.scrollHeight; // 此时新节点已挂载",
+        lang: "vue",
+        code: "<script setup>\nimport { nextTick, ref } from \"vue\";\n\nconst items = ref([\"A\"]);\nconst box = ref(null);\nconst note = ref(\"点按钮后对比两次子节点数\");\n\nasync function append() {\n  items.value.push(\"B\" + items.value.length);\n  const before = box.value.children.length;\n  await nextTick();\n  const after = box.value.children.length;\n  note.value = \"push 当时 \" + before + \" 个，nextTick 之后 \" + after + \" 个\";\n  console.log(note.value);\n}\n</script>\n\n<template>\n  <div>\n    <button @click=\"append\">追加并测量</button>\n    <ul ref=\"box\">\n      <li v-for=\"item in items\" :key=\"item\">{{ item }}</li>\n    </ul>\n    <p>{{ note }}</p>\n  </div>\n</template>\n",
       },
     ],
     followUps: ["nextTick 和浏览器事件循环里的微任务是什么关系？"],
@@ -1128,7 +1163,7 @@ export const frontendQuestions: Question[] = [
       {
         type: "code",
         lang: "ts",
-        code: "function debounce<T extends (...args: any[]) => void>(fn: T, wait = 300, immediate = false) {\n  let timer: ReturnType<typeof setTimeout> | null = null;\n  const debounced = (...args: Parameters<T>) => {\n    const callNow = immediate && !timer;\n    if (timer) clearTimeout(timer);\n    timer = setTimeout(() => {\n      timer = null;\n      if (!immediate) fn(...args);\n    }, wait);\n    if (callNow) fn(...args);\n  };\n  debounced.cancel = () => {\n    if (timer) clearTimeout(timer);\n    timer = null;\n  };\n  return debounced;\n}\n\nfunction throttle<T extends (...args: any[]) => void>(fn: T, interval = 300) {\n  let last = 0;\n  let timer: ReturnType<typeof setTimeout> | null = null;\n  let pending: Parameters<T> | null = null;\n  const throttled = (...args: Parameters<T>) => {\n    const now = Date.now();\n    const remain = interval - (now - last);\n    pending = args;\n    if (remain <= 0) {\n      if (timer) clearTimeout(timer);\n      timer = null;\n      last = now;\n      pending = null;\n      fn(...args);\n    } else if (!timer) {\n      timer = setTimeout(() => {\n        last = Date.now();\n        timer = null;\n        const argsToUse = pending;\n        pending = null;\n        if (argsToUse) fn(...argsToUse);\n      }, remain);\n    }\n  };\n  return throttled;\n}",
+        code: "function debounce<T extends (...args: any[]) => void>(fn: T, wait = 300, immediate = false) {\n  let timer: ReturnType<typeof setTimeout> | null = null;\n  const debounced = (...args: Parameters<T>) => {\n    const callNow = immediate && !timer;\n    if (timer) clearTimeout(timer);\n    timer = setTimeout(() => {\n      timer = null;\n      if (!immediate) fn(...args);\n    }, wait);\n    if (callNow) fn(...args);\n  };\n  debounced.cancel = () => {\n    if (timer) clearTimeout(timer);\n    timer = null;\n  };\n  return debounced;\n}\n\nfunction throttle<T extends (...args: any[]) => void>(fn: T, interval = 300) {\n  let last = 0;\n  let timer: ReturnType<typeof setTimeout> | null = null;\n  let pending: Parameters<T> | null = null;\n  const throttled = (...args: Parameters<T>) => {\n    const now = Date.now();\n    const remain = interval - (now - last);\n    pending = args;\n    if (remain <= 0) {\n      if (timer) clearTimeout(timer);\n      timer = null;\n      last = now;\n      pending = null;\n      fn(...args);\n    } else if (!timer) {\n      timer = setTimeout(() => {\n        last = Date.now();\n        timer = null;\n        const argsToUse = pending;\n        pending = null;\n        if (argsToUse) fn(...argsToUse);\n      }, remain);\n    }\n  };\n  return throttled;\n}\n\nconst pushed = [];\nconst save = debounce((value) => pushed.push(value), 20);\nsave(\"a\");\nsave(\"b\");\nawait new Promise((resolve) => setTimeout(resolve, 40));\nconsole.log(\"debounce\", pushed);"
       },
     ],
     followUps: ["立即执行的防抖，冷却期内卸载组件时，已经发出的那次调用怎么处理？"],
@@ -1154,7 +1189,7 @@ export const frontendQuestions: Question[] = [
       {
         type: "code",
         lang: "ts",
-        code: "function deepClone<T>(value: T, map = new WeakMap<object, unknown>()): T {\n  if (value === null || typeof value !== \"object\") return value;\n  if (value instanceof Date) return new Date(value) as unknown as T;\n  if (value instanceof RegExp) return new RegExp(value.source, value.flags) as unknown as T;\n  if (map.has(value as object)) return map.get(value as object) as T;\n\n  if (value instanceof Map) {\n    const clone = new Map();\n    map.set(value as object, clone);\n    value.forEach((v, k) => clone.set(deepClone(k, map), deepClone(v, map)));\n    return clone as unknown as T;\n  }\n  const clone: Record<string | symbol, unknown> =\n    Array.isArray(value) ? ([] as never) : Object.create(Object.getPrototypeOf(value));\n  map.set(value as object, clone);\n  Reflect.ownKeys(value as object).forEach(key => {\n    clone[key] = deepClone((value as Record<PropertyKey, unknown>)[key], map);\n  });\n  return clone as T;\n}",
+        code: "function deepClone<T>(value: T, map = new WeakMap<object, unknown>()): T {\n  if (value === null || typeof value !== \"object\") return value;\n  if (value instanceof Date) return new Date(value) as unknown as T;\n  if (value instanceof RegExp) return new RegExp(value.source, value.flags) as unknown as T;\n  if (map.has(value as object)) return map.get(value as object) as T;\n\n  if (value instanceof Map) {\n    const clone = new Map();\n    map.set(value as object, clone);\n    value.forEach((v, k) => clone.set(deepClone(k, map), deepClone(v, map)));\n    return clone as unknown as T;\n  }\n  const clone: Record<string | symbol, unknown> =\n    Array.isArray(value) ? ([] as never) : Object.create(Object.getPrototypeOf(value));\n  map.set(value as object, clone);\n  Reflect.ownKeys(value as object).forEach(key => {\n    clone[key] = deepClone((value as Record<PropertyKey, unknown>)[key], map);\n  });\n  return clone as T;\n}\n\nconst box = { n: 1, self: null as unknown };\nbox.self = box;\nconst copy = deepClone(box);\nconsole.log(copy.n, copy.self === copy, copy !== box);"
       },
     ],
     followUps: ["WeakMap 为什么不会因为记录了 key 而阻止原对象被回收？"],
@@ -1180,7 +1215,7 @@ export const frontendQuestions: Question[] = [
       {
         type: "code",
         lang: "ts",
-        code: "Function.prototype.myCall = function (ctx: any, ...args: unknown[]) {\n  ctx = ctx ?? globalThis;\n  const key = Symbol(\"fn\");\n  ctx[key] = this;\n  const result = ctx[key](...args);\n  delete ctx[key];\n  return result;\n};\n\nFunction.prototype.myBind = function (ctx: any, ...boundArgs: unknown[]) {\n  const fn = this;\n  function bound(this: unknown, ...args: unknown[]) {\n    // new 调用时 this 是新实例，优先使用它\n    return fn.apply(this instanceof bound ? this : ctx, [...boundArgs, ...args]);\n  }\n  bound.prototype = Object.create(fn.prototype);\n  return bound;\n};",
+        code: "Function.prototype.myCall = function (ctx: any, ...args: unknown[]) {\n  ctx = ctx ?? globalThis;\n  const key = Symbol(\"fn\");\n  ctx[key] = this;\n  const result = ctx[key](...args);\n  delete ctx[key];\n  return result;\n};\n\nFunction.prototype.myBind = function (ctx: any, ...boundArgs: unknown[]) {\n  const fn = this;\n  function bound(this: unknown, ...args: unknown[]) {\n    // new 调用时 this 是新实例，优先使用它\n    return fn.apply(this instanceof bound ? this : ctx, [...boundArgs, ...args]);\n  }\n  bound.prototype = Object.create(fn.prototype);\n  return bound;\n};\n\nfunction greet(this: { name: string }, tail: string) {\n  return this.name + tail;\n}\nconsole.log(greet.myCall({ name: \"Ada\" }, \"!\"));\nconst hi = greet.myBind({ name: \"Grace\" }, \",\");\nconsole.log(hi(\" Hopper\"));"
       },
     ],
     followUps: ["箭头函数调用 myCall 会发生什么？"],
@@ -1206,7 +1241,7 @@ export const frontendQuestions: Question[] = [
       {
         type: "code",
         lang: "ts",
-        code: "function myNew<T>(Ctor: new (...args: any[]) => T, ...args: any[]): T {\n  const obj = Object.create(Ctor.prototype);\n  const result = Ctor.apply(obj, args);\n  return result instanceof Object ? (result as T) : obj;\n}\n\nfunction myCreate(proto: object | null): object {\n  function F() {}\n  F.prototype = proto as object;\n  return new F();\n}",
+        code: "function myNew<T>(Ctor: new (...args: any[]) => T, ...args: any[]): T {\n  const obj = Object.create(Ctor.prototype);\n  const result = Ctor.apply(obj, args);\n  return result instanceof Object ? (result as T) : obj;\n}\n\nfunction myCreate(proto: object | null): object {\n  function F() {}\n  F.prototype = proto as object;\n  return new F();\n}\n\nfunction Person(this: { name: string }, name: string) {\n  this.name = name;\n}\nconst person = myNew(Person, \"Ada\");\nconsole.log(person.name, person instanceof Person);"
       },
     ],
     followUps: ["class 语法和普通构造函数在 new 上的行为差异（如 class 必须 new）？"],
@@ -1232,7 +1267,7 @@ export const frontendQuestions: Question[] = [
       {
         type: "code",
         lang: "ts",
-        code: "function myAll<T>(promises: Iterable<T | PromiseLike<T>>): Promise<T[]> {\n  return new Promise((resolve, reject) => {\n    const list = Array.from(promises);\n    const results: T[] = [];\n    let done = 0;\n    if (list.length === 0) return resolve([]);\n    list.forEach((p, i) => {\n      Promise.resolve(p).then(value => {\n        results[i] = value; // 保序的关键\n        if (++done === list.length) resolve(results);\n      }, reject);\n    });\n  });\n}\n\nasync function limitPool(tasks: (() => Promise<unknown>)[], limit: number) {\n  const queue = [...tasks];\n  const workers = Array.from({ length: limit }, async () => {\n    while (queue.length) {\n      await queue.shift()!();\n    }\n  });\n  await Promise.all(workers);\n}",
+        code: "function myAll<T>(promises: Iterable<T | PromiseLike<T>>): Promise<T[]> {\n  return new Promise((resolve, reject) => {\n    const list = Array.from(promises);\n    const results: T[] = [];\n    let done = 0;\n    if (list.length === 0) return resolve([]);\n    list.forEach((p, i) => {\n      Promise.resolve(p).then(value => {\n        results[i] = value; // 保序的关键\n        if (++done === list.length) resolve(results);\n      }, reject);\n    });\n  });\n}\n\nasync function limitPool(tasks: (() => Promise<unknown>)[], limit: number) {\n  const queue = [...tasks];\n  const workers = Array.from({ length: limit }, async () => {\n    while (queue.length) {\n      await queue.shift()!();\n    }\n  });\n  await Promise.all(workers);\n}\n\nconsole.log(\"all\", await myAll([Promise.resolve(1), 2, Promise.resolve(3)]));"
       },
     ],
     followUps: ["并发池里某个任务失败了，怎么做到不中断其他任务并最后统一收集错误？"],
@@ -1258,7 +1293,7 @@ export const frontendQuestions: Question[] = [
       {
         type: "code",
         lang: "ts",
-        code: "function curry(fn: (...args: any[]) => any): any {\n  return function curried(this: unknown, ...args: any[]) {\n    if (args.length >= fn.length) return fn.apply(this, args);\n    return (...rest: any[]) => curried.apply(this, [...args, ...rest]);\n  };\n}\n\nconst compose = (...fns: Function[]) =>\n  (x: unknown) => fns.reduceRight((acc, fn) => fn(acc), x);",
+        code: "function curry(fn: (...args: any[]) => any): any {\n  return function curried(this: unknown, ...args: any[]) {\n    if (args.length >= fn.length) return fn.apply(this, args);\n    return (...rest: any[]) => curried.apply(this, [...args, ...rest]);\n  };\n}\n\nconst compose = (...fns: Function[]) =>\n  (x: unknown) => fns.reduceRight((acc, fn) => fn(acc), x);\n\nfunction add(a: number, b: number, c: number) {\n  return a + b + c;\n}\nconsole.log(\"curry\", curry(add)(1)(2)(3));\nconsole.log(\"compose\", compose((n: number) => n + 1, (n: number) => n * 2)(3));"
       },
     ],
     followUps: ["柯里化和偏函数（partial application）的区别是什么？"],
