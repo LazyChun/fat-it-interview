@@ -9,6 +9,7 @@ import { frontendMoreQuestions } from "./frontend-more";
 import { frontendPlayQuestions } from "./frontend-play";
 import { frontendQuestions } from "./frontend";
 import { frontendStateQuestions } from "./frontend-state";
+import { frontendClassicQuestions } from "./frontend-classic";
 import { frontendUnitreeQuestions } from "./frontend-unitree";
 import { frontendViteQuestions } from "./frontend-vite";
 import { javaQuestions } from "./java";
@@ -28,6 +29,7 @@ export const QUESTIONS: Question[] = [
   ...frontendAiQuestions,
   ...frontendViteQuestions,
   ...frontendUnitreeQuestions,
+  ...frontendClassicQuestions,
   ...javaQuestions,
   ...backendQuestions,
   ...opsQuestions,
