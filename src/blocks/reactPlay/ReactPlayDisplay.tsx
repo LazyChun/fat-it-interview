@@ -1,0 +1,104 @@
+import React from "react";
+import { Radio, Switch } from "antd";
+import type { FatNotesPluginSDK } from "fat-notes-sdk";
+import { readReactPlay, type ReactPlayOptions } from "./defaultSource";
+import "./ReactPlayBlock.css";
+
+type HostComponent = React.FC<{
+  title?: string;
+  label?: React.ReactNode;
+  style?: React.CSSProperties;
+  children?: React.ReactNode;
+}>;
+
+interface EditBlock {
+  options?: unknown;
+}
+
+/**
+ * 配置抽屉右侧，对齐代码卡片：主题、是否显示控制台、控制台位置，以及卡片外框。
+ */
+const ReactPlayDisplay: React.FC<{ sdk: FatNotesPluginSDK }> = ({ sdk }) => {
+  const common = sdk.remoteComponents.BlockConfigCommon;
+  const flow = sdk.remoteComponents.FlowEditCommon;
+  const DisplayCollapse = common.DisplayCollapse as HostComponent;
+  const DisplayBox = common.DisplayBox as HostComponent;
+  const DisplayHighLight = common.DisplayHighLight as HostComponent;
+  const BlockName = common.BlockName as HostComponent;
+  const PanelDisplay = common.PanelDisplay as HostComponent;
+  const FatForm = flow.FatForm as HostComponent & { Item: HostComponent };
+  const useAppDispatch = flow.useAppDispatch as () => (action: {
+    type: string;
+    payload: unknown;
+  }) => void;
+  const useAppSelector = flow.useAppSelector as <T>(
+    selector: (state: { blockEdit?: { currentBlock?: EditBlock } }) => T,
+  ) => T;
+
+  const dispatch = useAppDispatch();
+  const currentBlock = useAppSelector((state) => state.blockEdit?.currentBlock);
+  const play = readReactPlay(currentBlock?.options);
+
+  const patch = (value: Partial<ReactPlayOptions>) => {
+    dispatch({
+      type: "blockEdit/onUpdateEditBlock",
+      payload: {
+        path: "options.reactPlay",
+        value: { ...play, ...value },
+      },
+    });
+  };
+
+  return (
+    <div className="fat-react-play-display">
+      <DisplayCollapse title="样式">
+        <FatForm style={{ marginTop: 16 }}>
+          <BlockName />
+          <DisplayBox>
+            <FatForm.Item label={<DisplayHighLight>主题</DisplayHighLight>}>
+              <Radio.Group
+                value={play.theme}
+                onChange={(event) =>
+                  patch({ theme: event.target.value === "light" ? "light" : "dark" })
+                }
+              >
+                <Radio.Button value="dark">深色</Radio.Button>
+                <Radio.Button value="light">浅色</Radio.Button>
+              </Radio.Group>
+            </FatForm.Item>
+          </DisplayBox>
+          <DisplayBox>
+            <FatForm.Item label={<DisplayHighLight>显示控制台</DisplayHighLight>}>
+              <Switch
+                checked={play.showConsole}
+                onChange={(checked) => patch({ showConsole: checked })}
+              />
+            </FatForm.Item>
+          </DisplayBox>
+          <DisplayBox>
+            <FatForm.Item label={<DisplayHighLight>控制台位置</DisplayHighLight>}>
+              <Radio.Group
+                value={play.consolePlacement}
+                disabled={!play.showConsole}
+                onChange={(event) =>
+                  patch({
+                    consolePlacement: event.target.value === "right" ? "right" : "bottom",
+                  })
+                }
+              >
+                <Radio.Button value="right">右侧</Radio.Button>
+                <Radio.Button value="bottom">下侧</Radio.Button>
+              </Radio.Group>
+            </FatForm.Item>
+          </DisplayBox>
+          <div className="fat-react-play-display-hint">
+            深色和浅色只作用在代码编辑器和控制台。预览页保持白底，颜色以组件自己的样式为准。控制台在下侧时放在代码下面，在右侧时放在页面下面。
+          </div>
+        </FatForm>
+      </DisplayCollapse>
+      <PanelDisplay />
+    </div>
+  );
+};
+
+export default ReactPlayDisplay;

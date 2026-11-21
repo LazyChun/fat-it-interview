@@ -5,6 +5,7 @@
  * Shared singletons must match fat-notes-core (React 18.2 / antd 6.3.1).
  */
 const path = require("path");
+const { execFileSync } = require("child_process");
 const {
   ModuleFederationPlugin,
 } = require("@module-federation/enhanced/webpack");
@@ -20,6 +21,14 @@ const MF_NAME =
 
 module.exports = (_, argv) => {
   const isProd = argv && argv.mode === "production";
+  execFileSync(process.execPath, [path.resolve(__dirname, "scripts/buildAntdSandbox.js")], {
+    stdio: "inherit",
+    cwd: __dirname,
+  });
+  execFileSync(process.execPath, [path.resolve(__dirname, "scripts/buildEditorLibs.js")], {
+    stdio: "inherit",
+    cwd: __dirname,
+  });
   // eslint-disable-next-line no-console
   console.log(
     `[fat-it-interview] building remoteEntry as MF name: "${MF_NAME}"`,
@@ -35,9 +44,29 @@ module.exports = (_, argv) => {
     },
     resolve: {
       extensions: [".ts", ".tsx", ".js", ".jsx"],
+      alias: {
+        // 包的 exports 不暴露 umd。别名指向文件后，预览 iframe 才能内联 React。
+        "fat-react-umd": path.resolve(
+          __dirname,
+          "node_modules/react/umd/react.production.min.js",
+        ),
+        "fat-react-dom-umd": path.resolve(
+          __dirname,
+          "node_modules/react-dom/umd/react-dom.production.min.js",
+        ),
+        "fat-lodash-umd": path.resolve(__dirname, "node_modules/lodash/lodash.min.js"),
+        "fat-antd-sandbox": path.resolve(
+          __dirname,
+          "src/blocks/reactPlay/generated/antdSandbox.js",
+        ),
+      },
     },
     module: {
       rules: [
+        {
+          test: /[\\/]umd[\\/]react(?:-dom)?\.production\.min\.js$|[\\/]lodash\.min\.js$|[\\/]antdSandbox\.js$/,
+          type: "asset/source",
+        },
         {
           test: /\.(ts|tsx)$/,
           use: {

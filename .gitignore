@@ -1,4 +1,5 @@
 node_modules/
+src/blocks/reactPlay/generated/
 dist/
 package-lock.json
 *.log

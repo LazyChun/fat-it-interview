@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "id": "7e2c9a14-6b58-4f3d-a1e0-9c8d4b7f2a61",
   "type": "bespokePlugin",
-  "name": "IT 面试题库",
-  "description": "覆盖 Web 前端 / Java / 后端 / 运维 / 算法 / 数据库 / 网络 / 操作系统八大方向",
+  "name": "肥面",
+  "description": "面试题库",
   "features": [
     {
       "id": "fatitinterview",
@@ -14,5 +14,9 @@
   ],
   "version": "0.1.1",
   "packageFile": "fat-it-interview_v0.1.1.zip",
-  "code": "fat-it-interview"
+  "code": "fat-it-interview",
+  "icon": "[icon]AliwangwangOutlined",
+  "engines": {
+    "fat-notes": ">=0.1.0"
+  }
 }

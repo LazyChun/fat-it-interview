@@ -1,0 +1,170 @@
+.fat-react-play {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.fat-react-play-toolbar {
+  flex: none;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 8px;
+  border-bottom: 1px solid rgba(127, 127, 127, 0.28);
+}
+
+.fat-react-play-hint {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  opacity: 0.65;
+}
+
+.fat-react-play-body {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+}
+
+.fat-react-play-pane {
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.fat-react-play-label {
+  flex: none;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 8px;
+  font-size: 12px;
+  opacity: 0.75;
+  border-bottom: 1px solid rgba(127, 127, 127, 0.2);
+}
+
+.fat-react-play-editor,
+.fat-react-play-preview {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  position: relative;
+}
+
+.fat-react-play-editor {
+  background: #1e1e1e;
+}
+
+.fat-react-play-editor-light {
+  background: #fff;
+}
+
+.fat-react-play-frame {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #fff;
+}
+
+.fat-react-play-console {
+  height: 100%;
+  min-height: 0;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 8px;
+  overflow: auto;
+  background: #1e1e1e;
+  color: #d4d4d4;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.fat-react-play-log-info {
+  color: #3794ff;
+}
+
+.fat-react-play-log-warn {
+  color: #cca700;
+}
+
+.fat-react-play-log-error {
+  color: #f14c4c;
+}
+
+.fat-react-play-log-system {
+  color: #6a9955;
+}
+
+.fat-react-play-console-light {
+  background: #fff;
+  color: #24292f;
+}
+
+.fat-react-play-console-light .fat-react-play-log-info {
+  color: #0958d9;
+}
+
+.fat-react-play-console-light .fat-react-play-log-warn {
+  color: #d48806;
+}
+
+.fat-react-play-console-light .fat-react-play-log-error {
+  color: #cf1322;
+}
+
+.fat-react-play-console-light .fat-react-play-log-system {
+  color: #389e0d;
+}
+
+.fat-react-play-display {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.fat-react-play-display-hint {
+  color: rgba(0, 0, 0, 0.45);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.fat-react-play-banner {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  max-height: 42%;
+  overflow: auto;
+  margin: 0;
+  padding: 8px;
+  border-radius: 6px;
+  background: rgba(255, 77, 79, 0.14);
+  color: #cf1322;
+  font-size: 12px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.fat-react-play-clear {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  opacity: 0.8;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 0;
+}

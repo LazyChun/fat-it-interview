@@ -5,15 +5,25 @@
  *   - 活动栏图标 → 主侧边栏 + 工作台整页
  *   - 主侧边栏只放分类和搜索
  *   - 工作台按 sdk.router 渲染总览或题目
- * 题库和算法演示都在前端完成，不启用 Python 后端。
+ * 题库、算法演示和 React 渲染都在前端完成，不启用 Python 后端。
  */
 import React from "react";
 import type { Disposable, FatNotesPluginSDK } from "fat-notes-sdk";
 import AlgoBlock from "./blocks/AlgoBlock";
 import DailyQuestionBlock from "./blocks/DailyQuestionBlock";
+import ReactPlayBlock from "./blocks/reactPlay/ReactPlayBlock";
+import ReactPlayDisplay from "./blocks/reactPlay/ReactPlayDisplay";
+import { DEFAULT_REACT_PLAY, DEFAULT_REACT_SOURCE } from "./blocks/reactPlay/defaultSource";
 import { CATEGORIES, CATEGORY_TREE, getCategory } from "./data/categories";
 import { QUESTIONS, getQuestion, topicOf } from "./data/questions";
-import { ACTIVITY_ICON, ACTIVITY_ID, ALGO_BLOCK_ICON, DAILY_BLOCK_ICON } from "./ids";
+import {
+  ACTIVITY_ICON,
+  ACTIVITY_ID,
+  ALGO_BLOCK_ICON,
+  DAILY_BLOCK_ICON,
+  IT_INTERVIEW_BLOCK_CATEGORY,
+  REACT_PLAY_BLOCK_ICON,
+} from "./ids";
 import { categoryIconComponent } from "./icons";
 import MenuView from "./MenuView";
 import { getProgress } from "./progress";
@@ -145,7 +155,7 @@ export async function activate(sdk: FatNotesPluginSDK): Promise<void> {
           React.createElement(
             "p",
             null,
-            `内置 ${QUESTIONS.length} 道题，分为 ${CATEGORIES.map((item) => item.title).join("、")}。算法题带逐步演示。`,
+            `内置 ${QUESTIONS.length} 道题，分为 ${CATEGORIES.map((item) => item.title).join("、")}。算法题带逐步演示。仪表盘可以添加「React 渲染」卡片，左边写组件，右边看页面。`,
           ),
           React.createElement(
             "p",
@@ -161,12 +171,20 @@ export async function activate(sdk: FatNotesPluginSDK): Promise<void> {
     }),
   );
 
+  safeRegister("blockCategory:it-interview", () =>
+    sdk.contributions.registerBlockCategory({
+      id: IT_INTERVIEW_BLOCK_CATEGORY,
+      title: "IT 面试",
+      after: "plugin",
+    }),
+  );
+
   safeRegister("block:daily", () =>
     sdk.contributions.registerBlockType({
       type: "fat-it-interview.daily",
       title: "今日面试题",
       iconUrl: DAILY_BLOCK_ICON,
-      category: "other",
+      category: IT_INTERVIEW_BLOCK_CATEGORY,
       index: 20,
       defaultSize: { w: 4, h: 12, minW: 3, minH: 8 },
       dataConfig: false,
@@ -174,7 +192,7 @@ export async function activate(sdk: FatNotesPluginSDK): Promise<void> {
         type: "fat-it-interview.daily",
         title: "今日面试题",
         summary: "展示一道面试题。没有私有配置，属性留空对象。不使用数据查询。",
-        category: "other",
+        category: IT_INTERVIEW_BLOCK_CATEGORY,
         keywords: ["面试题", "今日面试题", "面试"],
         layout: { w: 4, h: 12, description: "网格单位。画布 24 列，行高 8px。" },
         sections: [
@@ -191,7 +209,7 @@ export async function activate(sdk: FatNotesPluginSDK): Promise<void> {
       type: "fat-it-interview.algo",
       title: "算法演示",
       iconUrl: ALGO_BLOCK_ICON,
-      category: "other",
+      category: IT_INTERVIEW_BLOCK_CATEGORY,
       index: 21,
       defaultSize: { w: 6, h: 16, minW: 4, minH: 10 },
       dataConfig: false,
@@ -199,7 +217,7 @@ export async function activate(sdk: FatNotesPluginSDK): Promise<void> {
         type: "fat-it-interview.algo",
         title: "算法演示",
         summary: "逐步演示算法。没有私有配置，属性留空对象。不使用数据查询。",
-        category: "other",
+        category: IT_INTERVIEW_BLOCK_CATEGORY,
         keywords: ["算法", "算法演示"],
         layout: { w: 6, h: 16, description: "网格单位。画布 24 列，行高 8px。" },
         sections: [
@@ -208,6 +226,87 @@ export async function activate(sdk: FatNotesPluginSDK): Promise<void> {
         ],
       },
       render: () => React.createElement(AlgoBlock, { sdk }),
+    }),
+  );
+
+  safeRegister("block:react", () =>
+    sdk.contributions.registerBlockType({
+      type: "fat-it-interview.react",
+      title: "React 渲染",
+      iconUrl: REACT_PLAY_BLOCK_ICON,
+      category: IT_INTERVIEW_BLOCK_CATEGORY,
+      index: 22,
+      defaultSize: { w: 18, h: 48, minW: 10, minH: 20 },
+      defaultOptions: {
+        reactPlay: DEFAULT_REACT_PLAY,
+      },
+      defaultCommonOptions: {
+        padding: { all: 0 },
+      },
+      dataConfig: false,
+      configDoc: {
+        type: "fat-it-interview.react",
+        title: "React 渲染",
+        summary:
+          "三栏卡片：代码、控制台、页面。用户编写 function App 或 export default 组件，运行后在沙箱页面里渲染。不使用数据查询。",
+        category: IT_INTERVIEW_BLOCK_CATEGORY,
+        keywords: ["React", "JSX", "渲染", "代码", "预览", "面试"],
+        layout: { w: 18, h: 48, description: "网格单位。画布 24 列，行高 8px。" },
+        sections: [
+          {
+            key: "options",
+            description: "代码和展示选项都在 reactPlay。预览只提供 React 和 ReactDOM。",
+            fields: [
+              {
+                path: "reactPlay.source",
+                name: "React 源码",
+                dataType: "string",
+                description:
+                  "定义 function App()，或 export default 一个组件。支持 JSX 和 TypeScript 类型。console.log 显示在控制台。",
+                default: DEFAULT_REACT_SOURCE,
+              },
+              {
+                path: "reactPlay.theme",
+                name: "主题",
+                dataType: "string",
+                enum: ["dark", "light"],
+                default: "dark",
+                description: "代码编辑器和控制台的深浅色。预览页不跟随主题。",
+              },
+              {
+                path: "reactPlay.showConsole",
+                name: "显示控制台",
+                dataType: "boolean",
+                default: true,
+              },
+              {
+                path: "reactPlay.consolePlacement",
+                name: "控制台位置",
+                dataType: "string",
+                enum: ["bottom", "right"],
+                default: "bottom",
+                description: "bottom 在代码下侧，right 在页面下侧。",
+              },
+            ],
+            example: { reactPlay: DEFAULT_REACT_PLAY },
+          },
+          { key: "reqParams", description: "不查询数据源。", example: { queries: [] } },
+        ],
+        notes: [
+          "页面在不带同源权限的 iframe 里渲染，读不到宿主页面和本地存储。",
+          "预览里可以 import react、react-dom、lodash 和 antd。其它包和图标包不可用。",
+          "点运行或按 Ctrl+Enter 后才会重新渲染。",
+        ],
+      },
+      render: (props) => React.createElement(ReactPlayBlock, { sdk, ...props }),
+    }),
+  );
+
+  safeRegister("blockDisplay:react", () =>
+    sdk.contributions.registerBlockDisplayConfig({
+      id: "fat-it-interview.react.display",
+      blockType: "fat-it-interview.react",
+      render: () => React.createElement(ReactPlayDisplay, { sdk }),
     }),
   );
 
