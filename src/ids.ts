@@ -28,6 +28,12 @@ export const JS_PLAY_BLOCK_ICON =
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="4" fill="#f7df1e"/><text x="12" y="16.2" text-anchor="middle" font-family="Arial,sans-serif" font-size="9" font-weight="700" fill="#323330">JS</text></svg>`,
   );
 
+export const PY_PLAY_BLOCK_ICON =
+  "data:image/svg+xml;utf8," +
+  encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="4" fill="#3776ab"/><text x="12" y="16.2" text-anchor="middle" font-family="Arial,sans-serif" font-size="9" font-weight="700" fill="#ffd343">PY</text></svg>`,
+  );
+
 export const VUE_PLAY_BLOCK_ICON =
   "data:image/svg+xml;utf8," +
   encodeURIComponent(

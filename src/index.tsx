@@ -5,7 +5,7 @@
  *   - 活动栏图标 → 主侧边栏 + 工作台整页
  *   - 主侧边栏只放分类和搜索
  *   - 工作台按 sdk.router 渲染总览或题目
- * 题库、算法演示、React 渲染、Vue 渲染和 JavaScript 运行都在前端完成，不启用 Python 后端。
+ * 题库、算法演示、React 渲染、Vue 渲染、JavaScript 和 Python 都在浏览器里运行，不启用插件后端。
  */
 import React from "react";
 import type { Disposable, FatNotesPluginSDK } from "fat-notes-sdk";
@@ -20,6 +20,9 @@ import { DEFAULT_VUE_PLAY, DEFAULT_VUE_SOURCE } from "./blocks/vuePlay/defaultSo
 import JsPlayBlock from "./blocks/jsPlay/JsPlayBlock";
 import JsPlayDisplay from "./blocks/jsPlay/JsPlayDisplay";
 import { DEFAULT_JS_PLAY, DEFAULT_JS_SOURCE } from "./blocks/jsPlay/defaultSource";
+import PyPlayBlock from "./blocks/pyPlay/PyPlayBlock";
+import PyPlayDisplay from "./blocks/pyPlay/PyPlayDisplay";
+import { DEFAULT_PY_PLAY, DEFAULT_PY_SOURCE } from "./blocks/pyPlay/defaultSource";
 import { CATEGORIES, CATEGORY_TREE, getCategory } from "./data/categories";
 import { QUESTIONS, getQuestion, topicOf } from "./data/questions";
 import {
@@ -29,6 +32,7 @@ import {
   DAILY_BLOCK_ICON,
   IT_INTERVIEW_BLOCK_CATEGORY,
   JS_PLAY_BLOCK_ICON,
+  PY_PLAY_BLOCK_ICON,
   REACT_PLAY_BLOCK_ICON,
   VUE_PLAY_BLOCK_ICON,
 } from "./ids";
@@ -163,7 +167,7 @@ export async function activate(sdk: FatNotesPluginSDK): Promise<void> {
           React.createElement(
             "p",
             null,
-            `内置 ${QUESTIONS.length} 道题，分为 ${CATEGORIES.map((item) => item.title).join("、")}。算法题带逐步演示。仪表盘可以添加「React」「Vue」或「JavaScript」卡片。JavaScript 卡片可以运行代码，并 import lodash。`,
+            `内置 ${QUESTIONS.length} 道题，分为 ${CATEGORIES.map((item) => item.title).join("、")}。算法题带逐步演示。仪表盘可以添加「React」「Vue」「JavaScript」或「Python」卡片。JavaScript 卡片可以运行代码，并 import lodash。Python 卡片和代码卡片一样，在本机直接运行。`,
           ),
           React.createElement(
             "p",
@@ -514,6 +518,89 @@ export async function activate(sdk: FatNotesPluginSDK): Promise<void> {
       id: "fat-it-interview.javascript.display",
       blockType: "fat-it-interview.javascript",
       render: () => React.createElement(JsPlayDisplay, { sdk }),
+    }),
+  );
+
+  safeRegister("block:python", () =>
+    sdk.contributions.registerBlockType({
+      type: "fat-it-interview.python",
+      title: "Python",
+      iconUrl: PY_PLAY_BLOCK_ICON,
+      category: IT_INTERVIEW_BLOCK_CATEGORY,
+      index: 25,
+      defaultSize: { w: 16, h: 48, minW: 8, minH: 16 },
+      defaultOptions: {
+        pyPlay: DEFAULT_PY_PLAY,
+      },
+      defaultCommonOptions: {
+        padding: { all: 0 },
+      },
+      dataConfig: false,
+      configDoc: {
+        type: "fat-it-interview.python",
+        title: "Python",
+        summary:
+          "代码和控制台。和代码卡片的 Python 一样，在本机直接运行。print 显示在控制台，return 的值也显示在控制台。不使用数据查询。",
+        category: IT_INTERVIEW_BLOCK_CATEGORY,
+        keywords: ["Python", "py", "代码", "运行", "面试"],
+        layout: { w: 16, h: 48, description: "网格单位。画布 24 列，行高 8px。" },
+        sections: [
+          {
+            key: "options",
+            description: "代码和展示选项都在 pyPlay。运行方式和代码卡片的 Python 相同。",
+            fields: [
+              {
+                path: "pyPlay.source",
+                name: "Python 源码",
+                dataType: "string",
+                description:
+                  "普通 Python。print 显示在控制台。return 的值也显示在控制台。可以 import collections、json、math、re、datetime、itertools、functools。",
+                default: DEFAULT_PY_SOURCE,
+              },
+              {
+                path: "pyPlay.theme",
+                name: "主题",
+                dataType: "string",
+                enum: ["dark", "light"],
+                default: "dark",
+                description: "代码编辑器和控制台的深浅色。",
+              },
+              {
+                path: "pyPlay.showConsole",
+                name: "显示控制台",
+                dataType: "boolean",
+                default: true,
+              },
+              {
+                path: "pyPlay.consolePlacement",
+                name: "控制台位置",
+                dataType: "string",
+                enum: ["bottom", "right"],
+                default: "bottom",
+                description: "bottom 在代码下侧，right 在代码右侧。",
+              },
+            ],
+            example: { pyPlay: DEFAULT_PY_PLAY },
+          },
+          { key: "reqParams", description: "不查询数据源。", example: { queries: [] } },
+        ],
+        notes: [
+          "和代码卡片的 Python 走同一个本机运行接口，点运行后直接执行。",
+          "可以 import collections、json、math、re、datetime、time、itertools、functools。其它包不能引入。",
+          "print 显示在控制台。return 的值也显示在控制台。",
+          "点运行或按 Ctrl+Enter 后才会执行。",
+          "单次运行超过 15 秒会中断。",
+        ],
+      },
+      render: (props) => React.createElement(PyPlayBlock, { sdk, ...props }),
+    }),
+  );
+
+  safeRegister("blockDisplay:python", () =>
+    sdk.contributions.registerBlockDisplayConfig({
+      id: "fat-it-interview.python.display",
+      blockType: "fat-it-interview.python",
+      render: () => React.createElement(PyPlayDisplay, { sdk }),
     }),
   );
 
