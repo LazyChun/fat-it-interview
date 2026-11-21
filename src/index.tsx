@@ -5,7 +5,7 @@
  *   - 活动栏图标 → 主侧边栏 + 工作台整页
  *   - 主侧边栏只放分类和搜索
  *   - 工作台按 sdk.router 渲染总览或题目
- * 题库、算法演示、React 渲染和 Vue 渲染都在前端完成，不启用 Python 后端。
+ * 题库、算法演示、React 渲染、Vue 渲染和 JavaScript 运行都在前端完成，不启用 Python 后端。
  */
 import React from "react";
 import type { Disposable, FatNotesPluginSDK } from "fat-notes-sdk";
@@ -17,6 +17,9 @@ import { DEFAULT_REACT_PLAY, DEFAULT_REACT_SOURCE } from "./blocks/reactPlay/def
 import VuePlayBlock from "./blocks/vuePlay/VuePlayBlock";
 import VuePlayDisplay from "./blocks/vuePlay/VuePlayDisplay";
 import { DEFAULT_VUE_PLAY, DEFAULT_VUE_SOURCE } from "./blocks/vuePlay/defaultSource";
+import JsPlayBlock from "./blocks/jsPlay/JsPlayBlock";
+import JsPlayDisplay from "./blocks/jsPlay/JsPlayDisplay";
+import { DEFAULT_JS_PLAY, DEFAULT_JS_SOURCE } from "./blocks/jsPlay/defaultSource";
 import { CATEGORIES, CATEGORY_TREE, getCategory } from "./data/categories";
 import { QUESTIONS, getQuestion, topicOf } from "./data/questions";
 import {
@@ -25,6 +28,7 @@ import {
   ALGO_BLOCK_ICON,
   DAILY_BLOCK_ICON,
   IT_INTERVIEW_BLOCK_CATEGORY,
+  JS_PLAY_BLOCK_ICON,
   REACT_PLAY_BLOCK_ICON,
   VUE_PLAY_BLOCK_ICON,
 } from "./ids";
@@ -159,7 +163,7 @@ export async function activate(sdk: FatNotesPluginSDK): Promise<void> {
           React.createElement(
             "p",
             null,
-            `内置 ${QUESTIONS.length} 道题，分为 ${CATEGORIES.map((item) => item.title).join("、")}。算法题带逐步演示。仪表盘可以添加「React」或「Vue」卡片，左边写组件，右边看页面。`,
+            `内置 ${QUESTIONS.length} 道题，分为 ${CATEGORIES.map((item) => item.title).join("、")}。算法题带逐步演示。仪表盘可以添加「React」「Vue」或「JavaScript」卡片。JavaScript 卡片可以运行代码，并 import lodash。`,
           ),
           React.createElement(
             "p",
@@ -427,6 +431,89 @@ export async function activate(sdk: FatNotesPluginSDK): Promise<void> {
       id: "fat-it-interview.vue.display",
       blockType: "fat-it-interview.vue",
       render: () => React.createElement(VuePlayDisplay, { sdk }),
+    }),
+  );
+
+  safeRegister("block:javascript", () =>
+    sdk.contributions.registerBlockType({
+      type: "fat-it-interview.javascript",
+      title: "JavaScript",
+      iconUrl: JS_PLAY_BLOCK_ICON,
+      category: IT_INTERVIEW_BLOCK_CATEGORY,
+      index: 24,
+      defaultSize: { w: 16, h: 48, minW: 8, minH: 16 },
+      defaultOptions: {
+        jsPlay: DEFAULT_JS_PLAY,
+      },
+      defaultCommonOptions: {
+        padding: { all: 0 },
+      },
+      dataConfig: false,
+      configDoc: {
+        type: "fat-it-interview.javascript",
+        title: "JavaScript",
+        summary:
+          "代码和控制台。用户编写 JavaScript，运行后在沙箱里执行。可以 import lodash，也可以直接使用全局 _。return 的值显示在控制台。不使用数据查询。",
+        category: IT_INTERVIEW_BLOCK_CATEGORY,
+        keywords: ["JavaScript", "JS", "lodash", "代码", "运行", "面试"],
+        layout: { w: 16, h: 48, description: "网格单位。画布 24 列，行高 8px。" },
+        sections: [
+          {
+            key: "options",
+            description:
+              "代码和展示选项都在 jsPlay。沙箱里提供 lodash。支持 import、require，以及全局 _。",
+            fields: [
+              {
+                path: "jsPlay.source",
+                name: "JavaScript 源码",
+                dataType: "string",
+                description:
+                  '普通 JavaScript。可以 import { groupBy } from "lodash"，import debounce from "lodash/debounce"，或直接使用 _。console.log 显示在控制台，return 的值也显示在控制台。支持 async/await。',
+                default: DEFAULT_JS_SOURCE,
+              },
+              {
+                path: "jsPlay.theme",
+                name: "主题",
+                dataType: "string",
+                enum: ["dark", "light"],
+                default: "dark",
+                description: "代码编辑器和控制台的深浅色。",
+              },
+              {
+                path: "jsPlay.showConsole",
+                name: "显示控制台",
+                dataType: "boolean",
+                default: true,
+              },
+              {
+                path: "jsPlay.consolePlacement",
+                name: "控制台位置",
+                dataType: "string",
+                enum: ["bottom", "right"],
+                default: "bottom",
+                description: "bottom 在代码下侧，right 在代码右侧。",
+              },
+            ],
+            example: { jsPlay: DEFAULT_JS_PLAY },
+          },
+          { key: "reqParams", description: "不查询数据源。", example: { queries: [] } },
+        ],
+        notes: [
+          "代码在不带同源权限的 iframe 里运行，读不到宿主页面和本地存储。",
+          '可以 import "lodash" 或 "lodash-es"，也可以 import debounce from "lodash/debounce"，require("lodash")，或直接使用全局 _。其它包不能引入。',
+          "点运行或按 Ctrl+Enter 后才会执行。return 的值显示在控制台。",
+          "单次运行超过 15 秒会中断。",
+        ],
+      },
+      render: (props) => React.createElement(JsPlayBlock, { sdk, ...props }),
+    }),
+  );
+
+  safeRegister("blockDisplay:javascript", () =>
+    sdk.contributions.registerBlockDisplayConfig({
+      id: "fat-it-interview.javascript.display",
+      blockType: "fat-it-interview.javascript",
+      render: () => React.createElement(JsPlayDisplay, { sdk }),
     }),
   );
 

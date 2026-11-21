@@ -22,6 +22,12 @@ export const REACT_PLAY_BLOCK_ICON =
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g transform="translate(12 12) scale(0.92)" fill="none" stroke="#61dafb" stroke-width="1.15"><circle r="2.05" fill="#61dafb" stroke="none"/><ellipse rx="11" ry="4.2"/><ellipse rx="11" ry="4.2" transform="rotate(60)"/><ellipse rx="11" ry="4.2" transform="rotate(120)"/></g></svg>`,
   );
 
+export const JS_PLAY_BLOCK_ICON =
+  "data:image/svg+xml;utf8," +
+  encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="4" fill="#f7df1e"/><text x="12" y="16.2" text-anchor="middle" font-family="Arial,sans-serif" font-size="9" font-weight="700" fill="#323330">JS</text></svg>`,
+  );
+
 export const VUE_PLAY_BLOCK_ICON =
   "data:image/svg+xml;utf8," +
   encodeURIComponent(
