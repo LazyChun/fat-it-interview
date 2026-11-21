@@ -1,0 +1,90 @@
+.fat-js-snippet {
+  height: 460px;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 8px;
+  border: 1px solid rgba(127, 127, 127, 0.35);
+}
+
+.fat-js-snippet-toolbar {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-bottom: 1px solid rgba(127, 127, 127, 0.28);
+}
+
+.fat-js-snippet-hint {
+  flex: 1 1 160px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  opacity: 0.65;
+}
+
+.fat-js-snippet-loading {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  opacity: 0.65;
+}
+
+.fat-js-snippet-history {
+  flex: none;
+  max-height: 168px;
+  overflow: auto;
+  border-bottom: 1px solid rgba(127, 127, 127, 0.28);
+}
+
+.fat-js-snippet-history-empty {
+  padding: 8px 12px;
+  font-size: 12px;
+  opacity: 0.65;
+}
+
+.fat-js-snippet-history-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 4px 2px 8px;
+}
+
+.fat-js-snippet-history-row-active {
+  background: rgba(22, 119, 255, 0.12);
+}
+
+.fat-js-snippet-history-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  border: 0;
+  padding: 4px 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.fat-js-snippet-history-time {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.fat-js-snippet-history-preview {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 0.72;
+}

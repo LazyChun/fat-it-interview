@@ -1,8 +1,14 @@
 import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Checkbox, Popover } from "antd";
+import { Checkbox, Popover, Segmented } from "antd";
 import HolderOutlined from "@ant-design/icons/es/icons/HolderOutlined";
-import { useMenuPrefs } from "../hooks";
+import {
+  setExecutionConsolePlacement,
+  setExecutionTheme,
+  type ExecutionConsolePlacement,
+  type ExecutionTheme,
+} from "../executionTheme";
+import { useExecutionConsolePlacement, useExecutionTheme, useMenuPrefs } from "../hooks";
 import {
   dropIndex,
   isDefaultMenuPrefs,
@@ -39,6 +45,8 @@ interface DropState {
 
 const MenuSettingsButton: React.FC<Props> = ({ revealed }) => {
   const prefs = useMenuPrefs();
+  const executionTheme = useExecutionTheme();
+  const consolePlacement = useExecutionConsolePlacement();
   const [open, setOpen] = useState(false);
   const [drag, setDrag] = useState<DragState | null>(null);
   const [drop, setDrop] = useState<DropState | null>(null);
@@ -185,6 +193,39 @@ const MenuSettingsButton: React.FC<Props> = ({ revealed }) => {
             >
               恢复默认
             </button>
+          </div>
+          <div
+            style={{
+              marginTop: 8,
+              paddingTop: 8,
+              borderTop: "1px solid rgba(128,128,128,0.28)",
+            }}
+          >
+            <div style={{ fontWeight: 650, marginBottom: 8 }}>执行块</div>
+            <div style={{ fontSize: 12, marginBottom: 6 }}>样式</div>
+            <Segmented
+              block
+              size="small"
+              value={executionTheme}
+              onChange={(value) => setExecutionTheme(value as ExecutionTheme)}
+              options={[
+                { label: "浅色", value: "light" },
+                { label: "深色", value: "dark" },
+              ]}
+            />
+            <div style={{ fontSize: 12, margin: "10px 0 6px" }}>控制台位置</div>
+            <Segmented
+              block
+              size="small"
+              value={consolePlacement}
+              onChange={(value) =>
+                setExecutionConsolePlacement(value as ExecutionConsolePlacement)
+              }
+              options={[
+                { label: "下侧", value: "bottom" },
+                { label: "右侧", value: "right" },
+              ]}
+            />
           </div>
         </div>
       }

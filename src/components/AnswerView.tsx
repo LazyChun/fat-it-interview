@@ -1,4 +1,5 @@
 import React from "react";
+import type { FatNotesPluginSDK } from "fat-notes-sdk";
 import type { AnswerPart } from "../data/types";
 import CodeBlock from "./CodeBlock";
 
@@ -27,7 +28,13 @@ function Rich({ text }: { text: string }) {
   );
 }
 
-const AnswerView: React.FC<{ parts: AnswerPart[] }> = ({ parts }) => {
+const AnswerView: React.FC<{
+  parts: AnswerPart[];
+  questionId?: string;
+  sdk?: FatNotesPluginSDK;
+}> = ({ parts, questionId, sdk }) => {
+  const playFor = (snippetId: string) =>
+    sdk && questionId ? { sdk, snippetId: `${questionId}#${snippetId}` } : undefined;
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
       {parts.map((part, index) => {
@@ -60,9 +67,23 @@ const AnswerView: React.FC<{ parts: AnswerPart[] }> = ({ parts }) => {
           );
         }
         if (part.type === "samples") {
-          return <CodeBlock key={index} samples={part.samples} title={part.title} />;
+          return (
+            <CodeBlock
+              key={index}
+              samples={part.samples}
+              title={part.title}
+              play={playFor(`${index}#js`)}
+            />
+          );
         }
-        return <CodeBlock key={index} lang={part.lang} code={part.code} />;
+        return (
+          <CodeBlock
+            key={index}
+            lang={part.lang}
+            code={part.code}
+            play={playFor(String(index))}
+          />
+        );
       })}
     </div>
   );

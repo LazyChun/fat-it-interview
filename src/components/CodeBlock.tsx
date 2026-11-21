@@ -4,7 +4,11 @@ import type { Monaco } from "@monaco-editor/react";
 import type { editor } from "monaco-editor";
 import { Button, Segmented, theme as antdTheme } from "antd";
 import type { CSSProperties } from "react";
+import type { FatNotesPluginSDK } from "fat-notes-sdk";
+import JsSnippetCard from "../blocks/jsPlay/JsSnippetCard";
+import { isJavaScriptLang } from "../blocks/jsPlay/snippetStore";
 import { setCodeLang } from "../codeLang";
+import { subscribeEditorThemeReset } from "../executionTheme";
 import {
   CODE_LANG_META,
   availableLangs,
@@ -269,6 +273,12 @@ const CheckIcon = ({ style }: { style?: CSSProperties }) => (
   </svg>
 );
 
+interface CodeBlockPlay {
+  sdk: FatNotesPluginSDK;
+  /** 同一道题里每段代码一个 id，保存和历史按它分开 */
+  snippetId: string;
+}
+
 interface CodeBlockProps {
   /** 单语言代码（旧数据） */
   lang?: string;
@@ -277,9 +287,11 @@ interface CodeBlockProps {
   samples?: CodeSamples;
   /** 头部左侧的说明文字 */
   title?: string;
+  /** 传入后，JavaScript 可以换成可运行的卡片 */
+  play?: CodeBlockPlay;
 }
 
-const CodeBlock: React.FC<CodeBlockProps> = ({ lang, code, samples, title }) => {
+const CodeBlock: React.FC<CodeBlockProps> = ({ lang, code, samples, title, play }) => {
   const { token } = antdTheme.useToken();
   const dark = isDarkBg(token.colorBgBase);
   const preferred = useCodeLang();
@@ -302,7 +314,16 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ lang, code, samples, title }) => 
       ? CODE_LANG_META[activeLang].monaco
       : MONACO_LANGS[(lang ?? "").toLowerCase()] ?? (lang ?? "plaintext");
 
+  const cardSource = isMulti ? (samples?.js ?? "") : (code ?? "");
+  const canOpenCard =
+    Boolean(play) && cardSource.length > 0 && isJavaScriptLang(isMulti ? activeLang : lang);
+  const canKeepCard = Boolean(play) && cardSource.length > 0 && (isMulti || isJavaScriptLang(lang));
+  const [asCard, setAsCard] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  React.useEffect(() => {
+    setAsCard(false);
+  }, [play?.snippetId]);
   const timerRef = useRef<number | null>(null);
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
   // 初始高度按行数估算，避免 Monaco 加载完成后高度跳变
@@ -340,6 +361,13 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ lang, code, samples, title }) => 
     [],
   );
 
+  React.useEffect(() => {
+    const apply = () => {
+      monaco.editor.setTheme(dark ? "fn-code-dark" : "fn-code-light");
+    };
+    return subscribeEditorThemeReset(apply);
+  }, [dark]);
+
   const headerStyle = useMemo<CSSProperties>(
     () => ({
       display: "flex",
@@ -362,6 +390,17 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ lang, code, samples, title }) => 
     }),
     [token.colorTextTertiary],
   );
+
+  if (asCard && canKeepCard && play) {
+    return (
+      <JsSnippetCard
+        sdk={play.sdk}
+        snippetId={play.snippetId}
+        defaultSource={cardSource}
+        onShowCode={() => setAsCard(false)}
+      />
+    );
+  }
 
   return (
     <div
@@ -396,15 +435,22 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ lang, code, samples, title }) => 
             />
           ) : null}
         </div>
-        <Button
-          size="small"
-          type="text"
-          onClick={handleCopy}
-          icon={copied ? <CheckIcon /> : <CopyIcon />}
-          style={{ flex: "none", ...(copied ? { color: token.colorSuccess } : {}) }}
-        >
-          {copied ? "已复制" : "复制"}
-        </Button>
+        <div style={{ display: "flex", alignItems: "center", flex: "none" }}>
+          {canOpenCard ? (
+            <Button size="small" type="text" onClick={() => setAsCard(true)}>
+              执行
+            </Button>
+          ) : null}
+          <Button
+            size="small"
+            type="text"
+            onClick={handleCopy}
+            icon={copied ? <CheckIcon /> : <CopyIcon />}
+            style={copied ? { color: token.colorSuccess } : undefined}
+          >
+            {copied ? "已复制" : "复制"}
+          </Button>
+        </div>
       </div>
       <Editor
         height={height}

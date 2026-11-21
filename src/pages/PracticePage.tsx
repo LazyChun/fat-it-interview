@@ -289,7 +289,7 @@ const PracticePage: React.FC<Props> = ({ sdk, categoryId, questionId }) => {
               ) : null}
             </div>
             {visible ? (
-              <AnswerView parts={question.parts} />
+              <AnswerView sdk={sdk} questionId={question.id} parts={question.parts} />
             ) : (
               <Button type="primary" onClick={() => setShown(true)}>
                 查看参考答案
