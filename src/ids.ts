@@ -19,7 +19,7 @@ export const IT_INTERVIEW_BLOCK_CATEGORY = "it-interview";
 export const REACT_PLAY_BLOCK_ICON =
   "data:image/svg+xml;utf8," +
   encodeURIComponent(
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#1677ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="m8 9-2 3 2 3M16 9l2 3-2 3M13 8l-2 8"/></svg>`,
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g transform="translate(12 12) scale(0.92)" fill="none" stroke="#61dafb" stroke-width="1.15"><circle r="2.05" fill="#61dafb" stroke="none"/><ellipse rx="11" ry="4.2"/><ellipse rx="11" ry="4.2" transform="rotate(60)"/><ellipse rx="11" ry="4.2" transform="rotate(120)"/></g></svg>`,
   );
 
 export const VUE_PLAY_BLOCK_ICON =

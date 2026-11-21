@@ -159,7 +159,7 @@ export async function activate(sdk: FatNotesPluginSDK): Promise<void> {
           React.createElement(
             "p",
             null,
-            `内置 ${QUESTIONS.length} 道题，分为 ${CATEGORIES.map((item) => item.title).join("、")}。算法题带逐步演示。仪表盘可以添加「React 渲染」或「Vue 渲染」卡片，左边写组件，右边看页面。`,
+            `内置 ${QUESTIONS.length} 道题，分为 ${CATEGORIES.map((item) => item.title).join("、")}。算法题带逐步演示。仪表盘可以添加「React」或「Vue」卡片，左边写组件，右边看页面。`,
           ),
           React.createElement(
             "p",
@@ -236,7 +236,7 @@ export async function activate(sdk: FatNotesPluginSDK): Promise<void> {
   safeRegister("block:react", () =>
     sdk.contributions.registerBlockType({
       type: "fat-it-interview.react",
-      title: "React 渲染",
+      title: "React",
       iconUrl: REACT_PLAY_BLOCK_ICON,
       category: IT_INTERVIEW_BLOCK_CATEGORY,
       index: 22,
@@ -250,7 +250,7 @@ export async function activate(sdk: FatNotesPluginSDK): Promise<void> {
       dataConfig: false,
       configDoc: {
         type: "fat-it-interview.react",
-        title: "React 渲染",
+        title: "React",
         summary:
           "三栏卡片：代码、控制台、页面。用户编写 function App 或 export default 组件，运行后在沙箱页面里渲染。可选 Less 样式。不使用数据查询。",
         category: IT_INTERVIEW_BLOCK_CATEGORY,
@@ -334,7 +334,7 @@ export async function activate(sdk: FatNotesPluginSDK): Promise<void> {
   safeRegister("block:vue", () =>
     sdk.contributions.registerBlockType({
       type: "fat-it-interview.vue",
-      title: "Vue 渲染",
+      title: "Vue",
       iconUrl: VUE_PLAY_BLOCK_ICON,
       category: IT_INTERVIEW_BLOCK_CATEGORY,
       index: 23,
@@ -348,7 +348,7 @@ export async function activate(sdk: FatNotesPluginSDK): Promise<void> {
       dataConfig: false,
       configDoc: {
         type: "fat-it-interview.vue",
-        title: "Vue 渲染",
+        title: "Vue",
         summary:
           "三栏卡片：代码、控制台、页面。用户编写 Vue 3 单文件组件，或 export default 一个组件，运行后在沙箱页面里渲染。支持 script setup、template 和 style。不使用数据查询。",
         category: IT_INTERVIEW_BLOCK_CATEGORY,
