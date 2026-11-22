@@ -167,7 +167,7 @@ export async function activate(sdk: FatNotesPluginSDK): Promise<void> {
           React.createElement(
             "p",
             null,
-            `内置 ${QUESTIONS.length} 道题，分为 ${CATEGORIES.map((item) => item.title).join("、")}。算法题带逐步演示。题目里的 JavaScript 可以换成执行块：能改、能运行，保存后写在本机，历史里可以恢复或删除。菜单设置里可以改执行块的样式和控制台位置。仪表盘可以添加「React」「Vue」「JavaScript」或「Python」卡片。JavaScript 卡片可以运行代码，并 import lodash。Python 卡片和代码卡片一样，在本机直接运行。`,
+            `内置 ${QUESTIONS.length} 道题，分为 ${CATEGORIES.map((item) => item.title).join("、")}。算法题带逐步演示。题目里的 JavaScript 可以换成执行块：能改、能运行，保存后写在本机，历史里可以恢复或删除。菜单设置里可以改代码示例的展示类型，以及执行块的样式和控制台位置。选成执行块后，能运行的代码会直接打开执行块。仪表盘可以添加「React」「Vue」「JavaScript」或「Python」卡片。JavaScript 卡片可以运行代码，并 import lodash。Python 卡片和代码卡片一样，在本机直接运行。`,
           ),
           React.createElement(
             "p",

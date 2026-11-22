@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { readExecutionConsolePlacement, readExecutionTheme } from "../src/executionTheme";
+import {
+  readExecutionConsolePlacement,
+  readExecutionDisplayMode,
+  readExecutionTheme,
+} from "../src/executionTheme";
 
 describe("execution block prefs", () => {
   it("defaults to light and only accepts dark as the other choice", () => {
@@ -15,5 +19,13 @@ describe("execution block prefs", () => {
     expect(readExecutionConsolePlacement("bottom")).toBe("bottom");
     expect(readExecutionConsolePlacement("right")).toBe("right");
     expect(readExecutionConsolePlacement("left")).toBe("bottom");
+  });
+
+  it("defaults code samples to the read-only view and only accepts the execution block as the other choice", () => {
+    expect(readExecutionDisplayMode(null)).toBe("code");
+    expect(readExecutionDisplayMode("")).toBe("code");
+    expect(readExecutionDisplayMode("code")).toBe("code");
+    expect(readExecutionDisplayMode("block")).toBe("block");
+    expect(readExecutionDisplayMode("card")).toBe("code");
   });
 });

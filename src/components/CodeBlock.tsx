@@ -16,7 +16,7 @@ import {
   type CodeLang,
   type CodeSamples,
 } from "../data/codeSamples";
-import { useCodeLang } from "../hooks";
+import { useCodeLang, useExecutionDisplayMode } from "../hooks";
 
 /*
  * 使用本地打包的 monaco-editor（配合 monaco-editor-webpack-plugin 提供 worker），
@@ -297,6 +297,7 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ lang, code, samples, title, play 
   const { token } = antdTheme.useToken();
   const dark = isDarkBg(token.colorBgBase);
   const preferred = useCodeLang();
+  const displayMode = useExecutionDisplayMode();
   const langs = useMemo(() => (samples ? availableLangs(samples) : []), [samples]);
   const picked = useMemo(
     () => (samples ? pickSample(samples, preferred) : null),
@@ -328,12 +329,13 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ lang, code, samples, title, play 
     : (code ?? "");
   const canOpenCard = Boolean(play) && runtime !== null && cardSource.length > 0;
   const canKeepCard = canOpenCard;
-  const [asCard, setAsCard] = useState(false);
+  const showAsBlock = displayMode === "block";
+  const [asCard, setAsCard] = useState(showAsBlock);
   const [copied, setCopied] = useState(false);
 
   React.useEffect(() => {
-    setAsCard(false);
-  }, [play?.snippetId]);
+    setAsCard(showAsBlock);
+  }, [play?.snippetId, showAsBlock]);
   const timerRef = useRef<number | null>(null);
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
   // 初始高度按行数估算，避免 Monaco 加载完成后高度跳变

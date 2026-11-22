@@ -4,10 +4,13 @@ import { getCodeLang, subscribeCodeLang } from "./codeLang";
 import type { CodeLang } from "./data/codeSamples";
 import {
   getExecutionConsolePlacement,
+  getExecutionDisplayMode,
   getExecutionTheme,
   subscribeExecutionConsolePlacement,
+  subscribeExecutionDisplayMode,
   subscribeExecutionTheme,
   type ExecutionConsolePlacement,
+  type ExecutionDisplayMode,
   type ExecutionTheme,
 } from "./executionTheme";
 import { getMenuPrefs, subscribeMenuPrefs, type MenuPrefs } from "./menuPrefs";
@@ -37,6 +40,16 @@ export function useExecutionTheme(): ExecutionTheme {
   const [theme, setTheme] = useState<ExecutionTheme>(() => getExecutionTheme());
   useEffect(() => subscribeExecutionTheme(() => setTheme(getExecutionTheme())), []);
   return theme;
+}
+
+/** 代码示例默认是只读代码，还是直接打开执行块。菜单里改一次，当前题目一起换。 */
+export function useExecutionDisplayMode(): ExecutionDisplayMode {
+  const [mode, setMode] = useState<ExecutionDisplayMode>(() => getExecutionDisplayMode());
+  useEffect(
+    () => subscribeExecutionDisplayMode(() => setMode(getExecutionDisplayMode())),
+    [],
+  );
+  return mode;
 }
 
 /** 执行块控制台在下方还是右侧。 */

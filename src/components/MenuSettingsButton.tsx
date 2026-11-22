@@ -4,11 +4,18 @@ import { Checkbox, Popover, Segmented } from "antd";
 import HolderOutlined from "@ant-design/icons/es/icons/HolderOutlined";
 import {
   setExecutionConsolePlacement,
+  setExecutionDisplayMode,
   setExecutionTheme,
   type ExecutionConsolePlacement,
+  type ExecutionDisplayMode,
   type ExecutionTheme,
 } from "../executionTheme";
-import { useExecutionConsolePlacement, useExecutionTheme, useMenuPrefs } from "../hooks";
+import {
+  useExecutionConsolePlacement,
+  useExecutionDisplayMode,
+  useExecutionTheme,
+  useMenuPrefs,
+} from "../hooks";
 import {
   dropIndex,
   isDefaultMenuPrefs,
@@ -47,6 +54,7 @@ const MenuSettingsButton: React.FC<Props> = ({ revealed }) => {
   const prefs = useMenuPrefs();
   const executionTheme = useExecutionTheme();
   const consolePlacement = useExecutionConsolePlacement();
+  const displayMode = useExecutionDisplayMode();
   const [open, setOpen] = useState(false);
   const [drag, setDrag] = useState<DragState | null>(null);
   const [drop, setDrop] = useState<DropState | null>(null);
@@ -202,7 +210,18 @@ const MenuSettingsButton: React.FC<Props> = ({ revealed }) => {
             }}
           >
             <div style={{ fontWeight: 650, marginBottom: 8 }}>执行块</div>
-            <div style={{ fontSize: 12, marginBottom: 6 }}>样式</div>
+            <div style={{ fontSize: 12, marginBottom: 6 }}>展示类型</div>
+            <Segmented
+              block
+              size="small"
+              value={displayMode}
+              onChange={(value) => setExecutionDisplayMode(value as ExecutionDisplayMode)}
+              options={[
+                { label: "代码", value: "code" },
+                { label: "执行块", value: "block" },
+              ]}
+            />
+            <div style={{ fontSize: 12, margin: "10px 0 6px" }}>样式</div>
             <Segmented
               block
               size="small"
